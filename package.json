@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "clean:next": "node scripts/clean-next.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
