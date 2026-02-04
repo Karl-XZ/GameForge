@@ -12,11 +12,11 @@ A generative game workshop built with the **Google Gemini 3 API**.
 
 Making a tiny game should feel like sketching an idea on a napkin.
 
-But in practice, even “small” games come with a pile of chores: outline a story, break it into scenes, write branching choices, decide what assets you need, hunt for sprites, clean up backgrounds, wire everything into code, package a build, then repeat when one part doesn’t feel right.
+But in practice, even “small�?games come with a pile of chores: outline a story, break it into scenes, write branching choices, decide what assets you need, hunt for sprites, clean up backgrounds, wire everything into code, package a build, then repeat when one part doesn’t feel right.
 
 That’s the gap GameForge tries to close.
 
-GameForge is built for creators who want to move fast: students doing a class project, writers prototyping interactive fiction, designers validating a concept, or anyone who just wants to play something they imagined—without spending a weekend on tooling. The goal is simple: **type an idea, and five minutes later you’re clicking “Play.”**
+GameForge is built for creators who want to move fast: students doing a class project, writers prototyping interactive fiction, designers validating a concept, or anyone who just wants to play something they imagined—without spending a weekend on tooling. The goal is simple: **type an idea, and five minutes later you’re clicking “Play.�?*
 
 ---
 
@@ -78,6 +78,16 @@ GEMINI_TEXT_MODEL=gemini-3-flash-preview
 GEMINI_IMAGE_MODEL=gemini-3-pro-image-preview
 ```
 
+For Vercel deployment, also set the storage env vars (Vercel KV + Blob):
+
+```bash
+KV_URL=
+KV_REST_API_URL=
+KV_REST_API_TOKEN=
+KV_REST_API_READ_ONLY_TOKEN=
+BLOB_READ_WRITE_TOKEN=
+```
+
 #### Run
 
 ```bash
@@ -90,7 +100,7 @@ Open `http://localhost:3000`
 
 ## Gemini 3 Integration
 
-GameForge uses Gemini 3 as more than a “prompt in, text out” layer. It’s the coordinator that keeps the pipeline coherent from idea → assets → code.
+GameForge uses Gemini 3 as more than a “prompt in, text out�?layer. It’s the coordinator that keeps the pipeline coherent from idea �?assets �?code.
 
 ### Structured generation (JSON-first)
 
@@ -108,7 +118,7 @@ Sprites are not useful if a character looks different in every pose. For charact
 
 ### Code generation that actually runs
 
-Gemini 3 generates runnable HTML5 game code (and updates it after edits), then we wire it to the generated assets so “Play” is immediate.
+Gemini 3 generates runnable HTML5 game code (and updates it after edits), then we wire it to the generated assets so “Play�?is immediate.
 
 ### Reliability: retry means retry
 
@@ -133,43 +143,42 @@ GameForge is a Next.js app with server routes that orchestrate the generation pi
 
 ```
 Idea
- → (Gemini 3) Plan JSON
- → (Gemini 3) Scenes / Assets JSON
- → (Gemini 3) Images
+ �?(Gemini 3) Plan JSON
+ �?(Gemini 3) Scenes / Assets JSON
+ �?(Gemini 3) Images
       - character: __front first
       - variants: image-to-image
- → (Local) Green-screen cutout → transparent PNG
- → (Gemini 3) Runnable game code
- → Export zip (offline playable)
+ �?(Local) Green-screen cutout �?transparent PNG
+ �?(Gemini 3) Runnable game code
+ �?Export zip (offline playable)
 ```
 
 ---
 
 ## Challenges we ran into
 
-### Character “variants” turning into sprite collages
+### Character “variants�?turning into sprite collages
 
-If prompts mention “variants / differences / sheets,” image models often produce a single image containing multiple poses. That looks fine as an illustration—but it becomes a nightmare in a game pipeline.
+If prompts mention “variants / differences / sheets,�?image models often produce a single image containing multiple poses. That looks fine as an illustration—but it becomes a nightmare in a game pipeline.
 
-**Fix:** treat variants as a dependency graph. Generate `__front` once, then image-to-image every variant from that reference. Prompts are sanitized to forbid “sprite sheet / collage / multi-panel.”
-
+**Fix:** treat variants as a dependency graph. Generate `__front` once, then image-to-image every variant from that reference. Prompts are sanitized to forbid “sprite sheet / collage / multi-panel.�?
 ### Green screens aren’t one green
 
 Real outputs vary: neon green, yellow-green, darker green, uneven lighting, even gradients. A single hard-coded chroma key fails in surprising ways.
 
-**Fix:** detect the dominant green from the border, then do a two-pass key (strict → relaxed). If results look wrong, fall back to a safer legacy keying path.
+**Fix:** detect the dominant green from the border, then do a two-pass key (strict �?relaxed). If results look wrong, fall back to a safer legacy keying path.
 
 ### Retry wasn’t really retrying
 
-Browsers and providers love caching. Users click “retry” expecting a new result—and sometimes get the same image back.
+Browsers and providers love caching. Users click “retry�?expecting a new result—and sometimes get the same image back.
 
 **Fix:** every image request can be forced fresh using a nonce, and every rendered asset URL is cache-busted so the UI always reloads.
 
 ### Serverless file systems on Vercel
 
-You can’t write to the project directory at runtime (`/var/task`). Attempts to cache or mkdir there will fail.
+You can't write to the project directory at runtime (`/var/task`). Attempts to cache or mkdir there will fail.
 
-**Fix:** store runtime artifacts under a writable temp directory (`/tmp`) for serverless deployments, and keep exports deterministic.
+**Fix:** store game records in **Vercel KV** and assets in **Vercel Blob**. This avoids reliance on `/tmp` across requests and prevents data loss on cold starts.
 
 ---
 
@@ -178,39 +187,42 @@ You can’t write to the project directory at runtime (`/var/task`). Attempts to
 * **Playability as a first-class output**: you don’t end with a document; you end with a game you can click and run.
 * **Editable JSON workflow**: creators can steer the result without re-prompting everything.
 * **Consistent character sprites** using `__front` + image-to-image, which makes the side-scroller feel like a coherent game instead of a moodboard.
-* **Robust “good enough” cutout** that turns green-screen sprites into usable transparent PNGs automatically.
+* **Robust “good enough�?cutout** that turns green-screen sprites into usable transparent PNGs automatically.
 * **Offline export** that judges can run immediately without accounts, paywalls, or setup.
 
 ---
 
 ## What we learned
 
-We expected “generation quality” to be the hard part. It wasn’t.
+We expected “generation quality�?to be the hard part. It wasn’t.
 
 The bigger challenge was building a pipeline people can actually iterate on. In a creative tool, the moment something doesn’t behave predictably—retry returns the same image, a sprite has a weird background, a character changes identity—trust evaporates.
 
-We also learned that small constraints make huge differences. A single design decision—*always generate a reference sprite first*—did more for consistency than a dozen prompt tweaks. And for post-processing, “one clever heuristic” rarely wins; layered strategies with fallbacks beat fragile perfection.
+We also learned that small constraints make huge differences. A single design decision�?always generate a reference sprite first*—did more for consistency than a dozen prompt tweaks. And for post-processing, “one clever heuristic�?rarely wins; layered strategies with fallbacks beat fragile perfection.
 
-Most importantly: if the goal is “five minutes,” the workflow has to feel forgiving. Fast iteration is the product.
+Most importantly: if the goal is “five minutes,�?the workflow has to feel forgiving. Fast iteration is the product.
 
 ---
 
 ## What’s next for GameForge
 
-* **Project persistence & sharing** (Blob/KV or GCS): save and share games with a link
+* **Project persistence & sharing** via Vercel KV + Blob (or GCS): save and share games with a link
 * **Style kits** (pixel / watercolor / vector) with tighter cross-asset consistency
 * More genres: **top-down RPG**, **visual novel**, **tower defense**
 * Better animation tooling: hitbox helpers, frame tools, optional sprite-sheet packing
-* A playtest loop: play → give feedback → patch plan/assets/code automatically
+* A playtest loop: play �?give feedback �?patch plan/assets/code automatically
 
 ---
 
 ## Troubleshooting
 
 * **401 / missing key**: set `GEMINI_API_KEY` in `.env.local` (local) or Vercel env vars (deploy)
-* **Vercel ENOENT /var/task**: switch runtime storage to `/tmp` (serverless can’t write to `/var/task`)
+* **Vercel 404 Game not found / data resets**: ensure Vercel KV + Blob env vars are set (KV_* and BLOB_READ_WRITE_TOKEN)
 * **Timeouts on deploy**: generate in smaller batches or increase function limits
 * **Sharp issues locally**: use Node 18+ and reinstall deps (`rm -rf node_modules && npm i`)
 
 ---
+
+
+
 
