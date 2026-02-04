@@ -1,5 +1,6 @@
 ﻿import { promises as fs } from "fs";
 import path from "path";
+import os from "os";
 
 export type GameMode = "text-adventure" | "side-scroller";
 export type GameStatus = "draft" | "ready";
@@ -30,7 +31,12 @@ export type GameRecord = {
 
 // In Vercel Serverless Functions, process.cwd() points to /var/task (read-only).
 // The only writable directory is /tmp (temporary, may be cleared on cold start).
-const baseDir = process.env.VERCEL ? "/tmp/gameforge-data" : path.join(process.cwd(), ".gameforge-data");
+// GAMEFORGE_DATA_DIR allows custom storage path for future persistence options (Blob/KV).
+const baseDir =
+  process.env.GAMEFORGE_DATA_DIR ??
+  (process.env.VERCEL
+    ? "/tmp/gameforge-data"
+    : path.join(os.tmpdir(), "gameforge-data"));
 
 async function ensureDir(dir: string) {
   await fs.mkdir(dir, { recursive: true });
