@@ -1,0 +1,103 @@
+{
+  "common": {
+    "language": "Language",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "download": "Download",
+    "play": "Play",
+    "open": "Open",
+    "confirm": "Confirm",
+    "close": "Close"
+  },
+  "home": {
+    "title": "GameForge",
+    "description": "A game workshop with step-by-step editing and one-click generation. Supports Text Adventure/TRPG and Side-Scroller Action prototypes, automatically packaged as offline-ready zips.",
+    "subtitle": "GameForge · Vercel Ready",
+    "generateConsole": "Generate Console",
+    "stepByStep": "Step-by-Step Process",
+    "ideaPrompt": "Idea / Requirement",
+    "promptPlaceholder": "Example: Cyberpunk + TRPG events + Multiple endings...",
+    "textModel": "Text Model",
+    "imageModel": "Image Model",
+    "generateOneClick": "Generate in One Click",
+    "generating": "Generating...",
+    "retry": "Retry",
+    "viewLogs": "View One-Click Generation Logs",
+    "textAdventureLabel": "Text Adventure / TRPG",
+    "sideScrollerLabel": "Side-Scroller Action",
+    "currentGameId": "Current Game ID",
+    "notGenerated": "(Not generated)",
+    "generateThenPlay": "Generate before downloading or playing",
+    "tryPlay": "Try Play",
+    "downloadZip": "Download zip",
+    "step1": "Step 1",
+    "step2": "Step 2",
+    "step3": "Step 3",
+    "textAdventure": {
+      "step1Title": "Plot Outline",
+      "step2Title": "Scene JSON",
+      "step3Title": "Generate Images for Each Scene",
+      "generateOutline": "Generate Outline",
+      "saveChanges": "Save Changes",
+      "generateScenes": "Generate Scenes",
+      "generateAllImages": "Generate All Images",
+      "generateScenesFirst": "Please generate scene JSON first.",
+      "singleSceneRetry": "Single Scene Retry",
+      "transparentRequired": "Yes",
+      "transparentNotRequired": "No"
+    },
+    "sideScroller": {
+      "step1Title": "Asset List",
+      "step2Title": "Generate Asset Images",
+      "step3Title": "Generate Game HTML",
+      "generatePlan": "Generate Plan",
+      "saveChanges": "Save Changes",
+      "generateAllAssets": "Generate All Assets",
+      "generatePlanFirst": "Please generate asset list first.",
+      "singleAssetRetry": "Single Asset Retry",
+      "generateGame": "Generate Game",
+      "htmlPlaceholder": "AI-generated HTML will appear here (editable)."
+    },
+    "history": {
+      "title": "Game History",
+      "noRecords": "No records yet"
+    },
+    "footer": {
+      "hint": "Note: After deploying to Vercel, remember to set the <code>GEMINI_API_KEY</code> and optional model environment variables."
+    },
+    "errors": {
+      "deleteConfirm": "Are you sure you want to delete this game? This action cannot be undone.",
+      "deleteFailed": "Deletion failed",
+      "saveFailed": "Save failed",
+      "generateFailed": "Generation failed",
+      "outlineParseError": "Outline JSON cannot be parsed or missing gameId",
+      "scenesParseError": "Scene JSON cannot be parsed or missing gameId",
+      "planParseError": "Asset list JSON cannot be parsed or missing gameId",
+      "missingGameId": "Missing gameId",
+      "scenesParseError2": "Scene JSON cannot be parsed",
+      "planParseError2": "Asset list JSON cannot be parsed",
+      "singleSceneImageFailed": "Single scene image generation failed",
+      "singleAssetImageFailed": "Single asset image generation failed",
+      "downloadFailed": "Download failed",
+      "cancelled": "Cancelled",
+      "modifyFailed": "Modify failed",
+      "invalidOutlineJson": "Outline JSON is invalid. Please fix it first.",
+      "invalidPlanJson": "Plan JSON is invalid. Please fix it first."
+    },
+    "progress": {
+      "generatingOutline": "Generating outline",
+      "generatingScenes": "Generating scenes",
+      "generatingSceneImages": "Generating scene images",
+      "generatingPlan": "Generating asset list",
+      "generatingAssetImages": "Generating asset images",
+      "generatingGame": "Generating game"
+    },
+    "incrementalEditLabel": "Incremental edit (chat)",
+    "incrementalEditPlaceholder": "Example: Make the hero jump higher; add a new enemy; change the mood…",
+    "incrementalEditHint": "Tip: If you change assets in the plan, re-run Step 2 to regenerate sprites.",
+    "apply": "Apply",
+    "applying": "Applying…"
+  }
+}

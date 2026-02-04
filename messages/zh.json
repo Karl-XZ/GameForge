@@ -1,0 +1,103 @@
+{
+  "common": {
+    "language": "语言",
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "edit": "编辑",
+    "download": "下载",
+    "play": "试玩",
+    "open": "打开",
+    "confirm": "确认",
+    "close": "关闭"
+  },
+  "home": {
+    "title": "GameForge",
+    "description": "分步编辑 + 一键生成的游戏工坊。支持文字冒险/跑团与横版动作原型，自动打包为可离线运行的 zip。",
+    "subtitle": "GameForge · Vercel Ready",
+    "generateConsole": "生成控制台",
+    "stepByStep": "分步流程",
+    "ideaPrompt": "创意 / 需求",
+    "promptPlaceholder": "例如：赛博朋克 + 跑团事件 + 多结局...",
+    "textModel": "文本模型",
+    "imageModel": "生图模型",
+    "generateOneClick": "一键生成到底",
+    "generating": "生成中...",
+    "retry": "重试",
+    "viewLogs": "查看一键生成日志",
+    "textAdventureLabel": "文字冒险 / 跑团",
+    "sideScrollerLabel": "横版动作",
+    "currentGameId": "当前 Game ID",
+    "notGenerated": "(未生成)",
+    "generateThenPlay": "生成后可下载与试玩",
+    "tryPlay": "试玩",
+    "downloadZip": "下载 zip",
+    "step1": "步骤 1",
+    "step2": "步骤 2",
+    "step3": "步骤 3",
+    "textAdventure": {
+      "step1Title": "剧情大纲",
+      "step2Title": "分幕 JSON",
+      "step3Title": "逐幕出图",
+      "generateOutline": "生成大纲",
+      "saveChanges": "保存修改",
+      "generateScenes": "生成分幕",
+      "generateAllImages": "生成全部图片",
+      "generateScenesFirst": "请先生成分幕 JSON。",
+      "singleSceneRetry": "单幕重试",
+      "transparentRequired": "是",
+      "transparentNotRequired": "否"
+    },
+    "sideScroller": {
+      "step1Title": "素材清单",
+      "step2Title": "素材出图",
+      "step3Title": "生成游戏 HTML",
+      "generatePlan": "生成清单",
+      "saveChanges": "保存修改",
+      "generateAllAssets": "生成全部素材",
+      "generatePlanFirst": "请先生成素材清单。",
+      "singleAssetRetry": "单素材重试",
+      "generateGame": "生成游戏",
+      "htmlPlaceholder": "AI 生成的 HTML 将显示在这里（可编辑）。"
+    },
+    "history": {
+      "title": "历史游戏",
+      "noRecords": "暂无记录"
+    },
+    "footer": {
+      "hint": "提示：部署到 Vercel 后，记得设置 <code>GEMINI_API_KEY</code> 和可选的模型环境变量。"
+    },
+    "errors": {
+      "deleteConfirm": "确定删除这个游戏吗？此操作不可撤销。",
+      "deleteFailed": "删除失败",
+      "saveFailed": "保存失败",
+      "generateFailed": "生成失败",
+      "outlineParseError": "大纲 JSON 无法解析或缺少 gameId",
+      "scenesParseError": "分幕 JSON 无法解析或缺少 gameId",
+      "planParseError": "素材清单 JSON 无法解析或缺少 gameId",
+      "missingGameId": "缺少 gameId",
+      "scenesParseError2": "分幕 JSON 无法解析",
+      "planParseError2": "素材清单 JSON 无法解析",
+      "singleSceneImageFailed": "单幕出图失败",
+      "singleAssetImageFailed": "单素材出图失败",
+      "downloadFailed": "下载失败",
+      "cancelled": "已取消",
+      "modifyFailed": "修改失败",
+      "invalidOutlineJson": "大纲JSON格式不正确，请先修复。",
+      "invalidPlanJson": "计划JSON格式不正确，请先修复。"
+    },
+    "progress": {
+      "generatingOutline": "生成大纲",
+      "generatingScenes": "生成分幕",
+      "generatingSceneImages": "生成场景图片",
+      "generatingPlan": "生成素材清单",
+      "generatingAssetImages": "生成素材图片",
+      "generatingGame": "生成游戏"
+    },
+    "incrementalEditLabel": "增量修改（自然语言）",
+    "incrementalEditPlaceholder": "例如：让主角跳得更高；新增一个敌人；调整整体氛围…",
+    "incrementalEditHint": "提示：如果你在计划里新增/修改了素材，请重新执行步骤2生成素材。",
+    "apply": "应用",
+    "applying": "应用中…"
+  }
+}
