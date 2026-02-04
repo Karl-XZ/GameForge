@@ -1,52 +1,52 @@
 # TODOLIST
 
-以下为按需求拆分的实现清单（建议分阶段完成）。
+The following is the implementation checklist broken down by requirements (recommended to complete in stages).
 
-## 阶段 0：现有代码整理
-- [x] 梳理生成接口与数据结构，明确分步流程与状态机
-- [x] 定义统一的任务 ID / 游戏 ID
-- [x] 统一日志与进度输出（供前端可视化）
-- [x] 设计“分步编辑与二次提交”的通用机制（每一步都可回退/重试）
-- [x] 增加“一键生成到底”的全流程任务编排与按钮（可暂停/回退）
-- [x] 明确“一键模式”的自动确认策略与中断恢复策略
-- [x] 明确 JSON Schema 与数据字段约定（避免多阶段漂移）
+## Phase 0: Existing Code Organization
+- [x] Review generation interfaces and data structures, clarify step-by-step process and state machine
+- [x] Define unified task ID / game ID
+- [x] Unified logging and progress output (for frontend visualization)
+- [x] Design general mechanism for "step-by-step edit and resubmission" (each step can be rolled back/retried)
+- [x] Add "one-click generate to end" full pipeline task orchestration and button (can pause/rollback)
+- [x] Clarify "one-click mode" auto-confirmation strategy and interruption recovery strategy
+- [x] Clarify JSON Schema and data field conventions (avoid multi-stage drift)
 
-## 阶段 1：文字冒险 / 跑团流程
-- [x] 生成“剧情大纲”接口（支持编辑与二次提交）
-- [x] 剧情大纲编辑 UI + 确认按钮
-- [x] 生成“分幕 JSON”接口（含文本、分支选项、CG 提示词等）
-- [x] 分幕 JSON 可编辑与二次提交（支持单幕修正）
-- [x] 逐幕生成图片并缓存（失败可重试）
-- [x] CG 提示词可编辑并单幕重试出图
-- [x] 组装离线可运行 `index.html`
+## Phase 1: Text Adventure / TRPG Pipeline
+- [x] Generate "plot outline" interface (supports editing and resubmission)
+- [x] Plot outline editing UI + confirm button
+- [x] Generate "scene JSON" interface (including text, branch options, CG prompts, etc.)
+- [x] Scene JSON editable and resubmittable (supports single scene correction)
+- [x] Generate images scene by scene and cache (failure can retry)
+- [x] CG prompts editable and single scene retry image generation
+- [x] Assemble offline-run `index.html`
 
-## 阶段 2：横版动作流程
-- [x] AI 输出素材清单 JSON（含是否需要透明背景标记）
-- [x] 素材清单可编辑与二次提交（支持单素材修正）
-- [x] 生成所有素材图（需抠图的使用纯绿色背景）
-- [x] 素材生成支持逐项重试与替换
-- [x] 本地抠图算法（绿幕 → 透明 PNG）
-- [x] 资源 + 需求 交给 AI 生成完整 HTML5 游戏
-- [x] 组装离线可运行 `index.html`
+## Phase 2: Side-Scroller Action Pipeline
+- [x] AI outputs asset list JSON (including transparent background requirement marker)
+- [x] Asset list editable and resubmittable (supports single asset correction)
+- [x] Generate all asset images (assets requiring matting use pure green background)
+- [x] Asset generation supports per-item retry and replacement
+- [x] Local matting algorithm (green screen → transparent PNG)
+- [x] Assets + requirements handed to AI to generate complete HTML5 game
+- [x] Assemble offline-run `index.html`
 
-## 阶段 3：试玩与下载
-- [x] 新增 `/game/[id]` 页面（独立试玩）
-- [x] 首页仅展示生成流程与结果入口
-- [x] Zip 导出（`index.html` + 资源 + game.json 可选）
-- [x] `index.html` 内联 JSON 数据（避免 `file://` 下 fetch 失败）
-- [x] 资源命名与路径映射规范（zip 内结构一致）
-- [x] 下载按钮与下载状态提示
+## Phase 3: Play & Download
+- [x] Add `/game/[id]` page (standalone play)
+- [x] Homepage only shows generation pipeline and result entry points
+- [x] Zip export (`index.html` + assets + game.json optional)
+- [x] `index.html` inline JSON data (avoid `file://` fetch failure)
+- [x] Asset naming and path mapping conventions (zip internal structure consistent)
+- [x] Download button and download status indicator
 
-## 阶段 4：存储与复用
-- [x] 生成结果持久化（本地或临时存储）
-- [x] 支持重新打开历史游戏（基于 ID）
-- [x] 增量生成与重试策略
-- [x] 中间产物持久化（大纲 / 分幕 JSON / 素材清单 / 图片）
-- [x] 一键模式中断后的恢复与继续执行
+## Phase 4: Storage & Reuse
+- [x] Generation result persistence (local or temporary storage)
+- [x] Support reopening historical games (based on ID)
+- [x] Incremental generation and retry strategy
+- [x] Intermediate artifact persistence (outline / scene JSON / asset list / images)
+- [x] Recovery and continued execution after one-click mode interruption
 
-## 阶段 5：质量保障
-- [ ] 断网 / `file://` 运行测试
-- [ ] 离线包检查（无外部 CDN / 无网络请求）
-- [ ] 图像抠图质量检查
-- [x] 结构化 JSON 校验与兜底修复
-- [ ] 生成耗时与成本监控
+## Phase 5: Quality Assurance
+- [ ] Offline / `file://` run testing
+- [ ] Offline package check (no external CDNs / no network requests)
+- [ ] Image matting quality check
+- [x] Structured JSON validation and fallback repair
+- [ ] Generation time and cost monitoring

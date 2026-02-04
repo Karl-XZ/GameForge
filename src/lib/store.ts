@@ -28,7 +28,9 @@ export type GameRecord = {
   metrics?: Record<string, { startedAt: string; endedAt?: string; durationMs?: number }>;
 };
 
-const baseDir = path.join(process.cwd(), ".gameforge-data");
+// In Vercel Serverless Functions, process.cwd() points to /var/task (read-only).
+// The only writable directory is /tmp (temporary, may be cleared on cold start).
+const baseDir = process.env.VERCEL ? "/tmp/gameforge-data" : path.join(process.cwd(), ".gameforge-data");
 
 async function ensureDir(dir: string) {
   await fs.mkdir(dir, { recursive: true });
