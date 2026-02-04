@@ -2,7 +2,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import os from "os";
 import { kv } from "@vercel/kv";
-import { del as blobDel, head as blobHead, list as blobList, put as blobPut } from "@vercel/blob";
+import { del as blobDel, head as blobHead, list as blobList, put as blobPut, type ListBlobResult } from "@vercel/blob";
 
 export type GameMode = "text-adventure" | "side-scroller";
 export type GameStatus = "draft" | "ready";
@@ -233,7 +233,7 @@ export async function deleteGameRecord(id: string) {
       const prefix = `${blobPrefix}/${id}/`;
       let cursor: string | undefined = undefined;
       do {
-        const res = await blobList({ prefix, cursor });
+        const res: ListBlobResult = await blobList({ prefix, cursor });
         if (res.blobs.length > 0) {
           await blobDel(res.blobs.map((b) => b.url));
         }
