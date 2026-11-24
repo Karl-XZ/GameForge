@@ -5,7 +5,7 @@ import { Button, Card, CardContent, CardHeader, CardTitle } from "@/components/u
 import type { TextAdventureScenes } from "@/lib/schemas";
 
 export function TextAdventurePlayer({ data }: { data: TextAdventureScenes }) {
-  const scenes = Array.isArray(data?.scenes) ? data.scenes : [];
+  const scenes = React.useMemo(() => Array.isArray(data?.scenes) ? data.scenes : [], [data]);
   const sceneById = React.useMemo(() => {
     const m = new Map<string, TextAdventureScenes["scenes"][number]>();
     for (const s of scenes) m.set(String(s.id), s);

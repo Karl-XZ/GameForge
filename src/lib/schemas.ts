@@ -65,6 +65,10 @@ export const TextAdventureScenesSchema = z.object({
   tone: z.string().min(1),
   startingSceneId: z.string().min(1),
   scenes: z.array(TextAdventureSceneSchema).min(6),
+}).superRefine((game, ctx) => {
+  const ids = new Set(game.scenes.map(s => s.id));
+  if (ids.size !== game.scenes.length || !ids.has(game.startingSceneId)) ctx.addIssue({code:'custom',message:'Scene IDs must be unique and starting scene must exist'});
+  for (const scene of game.scenes) for (const choice of scene.choices) if (!ids.has(choice.nextSceneId)) ctx.addIssue({code:'custom',message:`Missing scene: ${choice.nextSceneId}`});
 });
 
 const PlatformSchema = z.object({

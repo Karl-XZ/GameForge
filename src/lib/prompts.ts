@@ -23,12 +23,16 @@ Now produce the JSON.`;
 
 export function buildTextAdventureScenesPrompt(opts: {
   outline: any;
+  userPrompt?: string;
 }) {
   const outline = JSON.stringify(opts.outline, null, 2);
 
   return `You are a senior game designer.
 
 TASK: Expand the outline into a full branching text-adventure as JSON.
+
+ORIGINAL USER REQUIREMENTS (preserve requested scope and scene count):
+${opts.userPrompt || ''}
 
 OUTLINE:
 ${outline}
@@ -94,8 +98,14 @@ RULES:
 - Output ONLY raw HTML (no markdown).
 - Use <canvas> and vanilla JS (no external libraries, no CDN).
 - Load assets from relative paths in ./assets/.
+- Use ONLY the listed asset filenames. If ASSETS is empty, use Canvas shapes and do not create Image objects or preload hypothetical sprites.
 - Include basic controls: arrow keys to move, up to jump, Z to attack.
 - Ensure the game runs from file:// (no fetch required).
+
+TEST INTERFACE (mandatory):
+- Implement window.GameAgentBridge = {ready:true, reset(seed), observe()} in the actual game. reset(seed) restarts the same deterministic game, no duplicate animation loops. Expose reset(seed) and observe() without external scripts.
+- observe() returns JSON with scene, player {x,y,vx,vy,health,onGround}, platforms, enemies, goal, progress, won, lost, events and controls. Report only player-visible state. Never expose secrets, teleport or test-only victory shortcuts.
+- Normal keyboard inputs must play the game. Include a visible Start button, Enter to start, R to restart, clear goals and visible win/lose states. Match observe() to rendered state.
 
 SPRITES:
 - Character assets (type player/enemy/npc) may include action+direction variants using this id convention:

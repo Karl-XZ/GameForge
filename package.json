@@ -5,10 +5,13 @@
   "type": "module",
   "scripts": {
     "clean:next": "node scripts/clean-next.mjs",
-    "dev": "next dev",
+    "dev": "next dev -H 127.0.0.1",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "start": "next start -H 127.0.0.1",
+    "lint": "next lint",
+    "test": "tsx --test --test-concurrency=1 tests/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "worker:setup": "python scripts/setup_worker.py"
   },
   "dependencies": {
     "@google/genai": "^0.7.0",
@@ -33,8 +36,10 @@
     "autoprefixer": "^10.4.19",
     "eslint": "^8.57.0",
     "eslint-config-next": "^14.2.0",
+    "playwright": "^1.65.1",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.4",
+    "tsx": "^4.23.15",
     "typescript": "^5.5.4"
   }
 }

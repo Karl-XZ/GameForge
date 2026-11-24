@@ -2,7 +2,6 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { useTransition } from 'react';
-import { locales } from '@/i18n/request';
 
 export function LanguageSelector() {
   const router = useRouter();

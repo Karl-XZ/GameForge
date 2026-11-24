@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 import { generateImage } from "@/lib/gemini";
 import { buildCoverPromptFromOutline } from "@/lib/prompts";
-import { loadGameRecord, saveGameRecord, saveAssetFile } from "@/lib/store";
+import { loadGameRecord, saveGameRecord, saveAssetFile, readAssetFile } from "@/lib/store";
 import { slugify } from "@/lib/utils";
 import { withRequestNonce } from "@/lib/imagePrompt";
 
@@ -35,11 +35,13 @@ export async function POST(req: Request) {
       const id = String(scene?.id ?? "scene");
       const prompt = String(scene?.cgPrompt ?? "").trim();
       if (!prompt) continue;
+      if (!force && sceneFiles[id] && await readAssetFile(gameId, sceneFiles[id]).catch(()=>null)) continue;
       const img = await generateImage({ model: record.imageModel, prompt: withRequestNonce(prompt, force) });
       const buffer = Buffer.from(img.data, "base64");
       const file = `scene-${slugify(id)}.png`;
       await saveAssetFile(gameId, file, buffer);
       sceneFiles[id] = file;
+      await saveGameRecord(gameId, {scenes:scenesDoc,images:{...(record.images??{}),scenes:{...sceneFiles}}});
     }
 
     let coverFile = record.images?.cover;

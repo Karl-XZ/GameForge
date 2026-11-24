@@ -1,0 +1,6 @@
+Vendored MIT dependency: https://github.com/IMBALDY/RecursiveGameCreator
+Commit: 8284caeac655e8c6c08354a759b97b1599d426fd
+License: vendor/RGC-LICENSE
+Upstream source is unchanged. HTTP provider adaptation, budget accounting and original-baseline selection live outside vendor/.
+
+Local patch: runtime.py adds Docker CPU/memory/process limits. game.py waits for first paint and retries only failed observation screenshot once (never replays actions). All other upstream files are unchanged.

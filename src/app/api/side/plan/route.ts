@@ -1,3 +1,4 @@
+import { configuredModels } from '@/lib/providers';
 ﻿import { NextResponse } from "next/server";
 import { SideScrollerPlanSchema } from "@/lib/schemas";
 import { generateStructured } from "@/lib/gemini";
@@ -11,19 +12,13 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-function envOr(name: string, fallback: string) {
-  return process.env[name] && process.env[name]!.trim().length > 0
-    ? process.env[name]!.trim()
-    : fallback;
-}
-
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const prompt = String(body?.prompt ?? "").trim();
     const language = body?.language === "en" ? "en" : "zh";
-    const textModel = String(body?.textModel ?? envOr("GEMINI_TEXT_MODEL", "gemini-3-flash-preview"));
-    const imageModel = String(body?.imageModel ?? envOr("GEMINI_IMAGE_MODEL", "gemini-2.5-flash-image"));
+    const textModel = String(body?.textModel ?? configuredModels().defaultText);
+    const imageModel = String(body?.imageModel ?? configuredModels().defaultImage);
 
     if (!prompt) {
       return NextResponse.json({ ok: false, error: "Prompt is required" }, { status: 400 });
@@ -64,7 +59,7 @@ export async function POST(req: Request) {
 
     // Ensure every character with variants has a "__front" reference sprite.
     const injected = injectFrontAssets({ assets: assets0 as any, lang: language });
-    const assets = injected.assets;
+    const assets = body.visualMode === 'canvas' ? [] : Number(body.assetLimit) === 1 ? injected.assets.filter(a=>a.type==='background').slice(0,1) : injected.assets;
 
     const plan = { ...planRaw, assets };
 

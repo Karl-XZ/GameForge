@@ -5,3 +5,15 @@ out
 .env
 .DS_Store
 .gameforge-data
+
+.env.*
+!.env.example
+output/
+.tools/
+*.tsbuildinfo
+__pycache__/
+.superpowers/
+
+.playwright-cli/
+
+.next-production/

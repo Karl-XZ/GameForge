@@ -1,6 +1,6 @@
+import { withGameLock } from './lock';
 import { promises as fs } from "fs";
 import path from "path";
-import os from "os";
 import { kv } from "@vercel/kv";
 import { del as blobDel, head as blobHead, list as blobList, put as blobPut, type ListBlobResult } from "@vercel/blob";
 
@@ -27,6 +27,9 @@ export type GameRecord = {
   };
   assetMeta?: Record<string, { type: string; needsCutout: boolean; file: string }>;
   gameHtml?: string;
+  selectedVersion?: string;
+  revision?: number;
+  generationConfig?: string;
   warnings?: string[];
   metrics?: Record<string, { startedAt: string; endedAt?: string; durationMs?: number }>;
 };
@@ -38,11 +41,16 @@ const useRemoteStorage = hasKv && hasBlob;
 
 // Local filesystem fallback for dev/test only.
 // On Vercel, KV + Blob is required to avoid /tmp persistence issues.
-const baseDir =
-  process.env.GAMEFORGE_DATA_DIR ??
-  (isVercel
-    ? "/tmp/gameforge-data"
-    : path.join(os.tmpdir(), "gameforge-data"));
+export const dataRoot = () => path.resolve(process.env.GAMEFORGE_DATA_DIR || path.join(process.cwd(), ".gameforge-data"));
+
+export function safeId(value: string) {
+  if (!/^[a-zA-Z0-9_-]{1,100}$/.test(value)) throw new Error("Invalid identifier");
+  return value;
+}
+export function safeFile(value: string) {
+  if (!/^[a-zA-Z0-9_.-]{1,180}$/.test(value) || value.includes("..")) throw new Error("Invalid filename");
+  return value;
+}
 
 const recordKey = (id: string) => `game:${id}`;
 const blobPrefix = process.env.GAMEFORGE_BLOB_PREFIX?.trim() || "gameforge";
@@ -62,11 +70,11 @@ async function ensureDir(dir: string) {
 }
 
 function recordPath(id: string) {
-  return path.join(baseDir, id, "record.json");
+  return path.join(dataRoot(), safeId(id), "record.json");
 }
 
 function assetDir(id: string) {
-  return path.join(baseDir, id, "assets");
+  return path.join(dataRoot(), safeId(id), "assets");
 }
 
 function parseRecord(raw: unknown): GameRecord | null {
@@ -98,7 +106,7 @@ export async function createGameRecord(input: {
   textModel: string;
   imageModel: string;
 }) {
-  const id = Math.random().toString(36).slice(2, 10);
+  const id = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
   const now = new Date().toISOString();
   const record: GameRecord = {
     id,
@@ -115,7 +123,7 @@ export async function createGameRecord(input: {
     assertRemoteReady();
     await kv.set(recordKey(id), JSON.stringify(record));
   } else {
-    await ensureDir(path.join(baseDir, id));
+    await ensureDir(path.join(dataRoot(), safeId(id)));
     await ensureDir(assetDir(id));
     await fs.writeFile(recordPath(id), JSON.stringify(record, null, 2), "utf-8");
   }
@@ -123,6 +131,7 @@ export async function createGameRecord(input: {
 }
 
 export async function loadGameRecord(id: string): Promise<GameRecord | null> {
+  safeId(id);
   try {
     if (useRemoteStorage) {
       assertRemoteReady();
@@ -136,9 +145,26 @@ export async function loadGameRecord(id: string): Promise<GameRecord | null> {
   }
 }
 
-export async function saveGameRecord(id: string, patch: Partial<GameRecord>) {
-  const current = (await loadGameRecord(id)) ?? null;
+export async function saveGameRecord(id: string, patch: Partial<GameRecord>): Promise<GameRecord | null> {
+  return withGameLock(id, () => saveUnlocked(id, patch));
+}
+async function saveUnlocked(id: string, patch: Partial<GameRecord>): Promise<GameRecord | null> {
+  let current = (await loadGameRecord(id)) ?? null;
   if (!current) return null;
+  const changed = ['plan','outline','scenes','gameHtml','images'].some(k => k in patch && JSON.stringify((patch as any)[k]) !== JSON.stringify((current as any)[k]));
+  if (changed && (current.gameHtml || (current.status === 'ready' && current.scenes))) {await (await import('./versions')).snapshotGame(id, 'before edit');current=(await loadGameRecord(id))!;}
+  if (patch.plan && JSON.stringify(patch.plan) !== JSON.stringify(current.plan) && !('gameHtml' in patch)) {
+    patch = {...patch, gameHtml:undefined,status:'draft',...(!('images' in patch)?{images:{...(current.images||{}),assets:{}}}:{})};
+  }
+  if (patch.outline && JSON.stringify(patch.outline) !== JSON.stringify(current.outline) && !('scenes' in patch)) {
+    patch = {...patch, scenes:undefined,status:'draft',...(!('images' in patch)?{images:{...(current.images||{}),cover:undefined,scenes:{}}}:{})};
+  }
+  if(patch.scenes && JSON.stringify(patch.scenes)!==JSON.stringify(current.scenes) && !('images' in patch)) {
+    const previous=new Map((current.scenes?.scenes||[]).map((scene:any)=>[scene.id,scene.cgPrompt]));
+    const unchanged=new Set((patch.scenes.scenes||[]).filter((scene:any)=>previous.get(scene.id)===scene.cgPrompt).map((scene:any)=>scene.id));
+    patch={...patch,status:'draft',images:{...(current.images||{}),scenes:Object.fromEntries(Object.entries(current.images?.scenes||{}).filter(([id])=>unchanged.has(id)))}};
+  }
+  if (changed && !('selectedVersion' in patch)) patch = {...patch,selectedVersion:undefined};
   const next: GameRecord = {
     ...current,
     ...patch,
@@ -146,12 +172,15 @@ export async function saveGameRecord(id: string, patch: Partial<GameRecord>) {
     mode: current.mode,
     createdAt: current.createdAt,
     updatedAt: new Date().toISOString(),
+    revision: (current.revision || 0) + 1,
   };
   if (useRemoteStorage) {
     assertRemoteReady();
     await kv.set(recordKey(id), JSON.stringify(next));
   } else {
-    await fs.writeFile(recordPath(id), JSON.stringify(next, null, 2), "utf-8");
+    const temp = recordPath(id)+'.'+crypto.randomUUID()+'.tmp';
+    await fs.writeFile(temp, JSON.stringify(next, null, 2), "utf-8");
+    await fs.rename(temp, recordPath(id));
   }
   return next;
 }
@@ -167,9 +196,9 @@ export async function listGames(): Promise<GameRecord[]> {
         if (record) records.push(record);
       }
     } else {
-      await ensureDir(baseDir);
-      const entries = await fs.readdir(baseDir, { withFileTypes: true });
-      const ids = entries.filter((e) => e.isDirectory()).map((e) => e.name);
+      await ensureDir(dataRoot());
+      const entries = await fs.readdir(dataRoot(), { withFileTypes: true });
+      const ids = entries.filter((e) => e.isDirectory() && /^[a-zA-Z0-9_-]{1,100}$/.test(e.name)).map((e) => e.name);
       for (const id of ids) {
         const record = await loadGameRecord(id);
         if (record) records.push(record);
@@ -181,7 +210,15 @@ export async function listGames(): Promise<GameRecord[]> {
   }
 }
 
-export async function saveAssetFile(id: string, filename: string, buffer: Buffer) {
+export async function saveAssetFile(id: string, filename: string, buffer: Buffer): Promise<string> {
+  return withGameLock(id, async () => {
+    const current = await loadGameRecord(id);
+    if (current?.gameHtml || (current?.status === 'ready' && current.scenes)) await (await import('./versions')).snapshotGame(id, 'before asset edit');
+    return saveAssetUnlocked(id, filename, buffer);
+  });
+}
+async function saveAssetUnlocked(id: string, filename: string, buffer: Buffer): Promise<string> {
+  safeId(id); safeFile(filename);
   if (useRemoteStorage) {
     assertRemoteReady();
     const pathname = blobPath(id, filename);
@@ -200,6 +237,7 @@ export async function saveAssetFile(id: string, filename: string, buffer: Buffer
 }
 
 export async function readAssetFile(id: string, filename: string) {
+  safeId(id); safeFile(filename);
   if (useRemoteStorage) {
     assertRemoteReady();
     if (filename.startsWith("http")) {
@@ -226,6 +264,7 @@ export function getAssetFilePath(id: string, filename: string) {
 }
 
 export async function deleteGameRecord(id: string) {
+  safeId(id);
   try {
     if (useRemoteStorage) {
       assertRemoteReady();
@@ -241,7 +280,7 @@ export async function deleteGameRecord(id: string) {
       } while (cursor);
       return true;
     }
-    await fs.rm(path.join(baseDir, id), { recursive: true, force: true });
+    await fs.rm(path.join(dataRoot(), safeId(id)), { recursive: true, force: true });
     return true;
   } catch {
     return false;

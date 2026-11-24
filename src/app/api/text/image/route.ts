@@ -23,6 +23,7 @@ export async function POST(req: Request) {
     if (!record) {
       return NextResponse.json({ ok: false, error: "Game not found" }, { status: 404 });
     }
+    if(!record.scenes?.scenes?.some((scene:any)=>scene.id===sceneId)) return NextResponse.json({ok:false,error:'Unknown scene'},{status:400});
 
     const prompt = withRequestNonce(cgPrompt, force);
     const img = await generateImage({ model: record.imageModel, prompt });
@@ -32,6 +33,7 @@ export async function POST(req: Request) {
 
     const sceneFiles = { ...(record.images?.scenes ?? {}), [sceneId]: file };
     await saveGameRecord(gameId, {
+      scenes:{...record.scenes,scenes:record.scenes.scenes.map((scene:any)=>scene.id===sceneId?{...scene,cgPrompt}:scene)},
       images: { ...(record.images ?? {}), scenes: sceneFiles },
     });
 

@@ -1,6 +1,7 @@
 ﻿import JSZip from "jszip";
 import { readAssetFile } from "@/lib/store";
 import type { GameRecord } from "@/lib/store";
+import { readVersionAsset, digest, type GameVersion } from './versions';
 
 function escapeJson(data: any) {
   return JSON.stringify(data).replace(/</g, "\\u003c");
@@ -29,6 +30,7 @@ export function buildTextAdventureGameData(record: GameRecord, assetBase?: strin
     image: sceneImages[String(s.id)] ? `${base}${sceneImages[String(s.id)]}` : null,
   }));
   return {
+    language: record.language,
     title: scenesDoc.title ?? record.outline?.title ?? "",
     setting: scenesDoc.setting ?? record.outline?.setting ?? "",
     tone: scenesDoc.tone ?? record.outline?.tone ?? "",
@@ -72,6 +74,7 @@ export function buildTextAdventureHtml(record: GameRecord, assetBase?: string) {
     </div>
     <div class="choices" id="choices"></div>
     <div id="ending" class="ending" style="display:none"></div>
+    <button id="restart" class="choice-btn" style="display:none">${record.language==='en'?'Play again':'重新开始'}</button>
   </div>
 
   <script id="game-data" type="application/json">${dataJson}</script>
@@ -106,8 +109,10 @@ export function buildTextAdventureHtml(record: GameRecord, assetBase?: string) {
       const isEnding = scene.isEnding || (scene.choices || []).length === 0;
       choices.innerHTML = '';
       ending.style.display = isEnding ? 'block' : 'none';
+      $('restart').style.display = isEnding ? 'block' : 'none';
       if (isEnding) {
-        const label = scene.endingType === 'win' ? '成功' : scene.endingType === 'fail' ? '失败' : '收束';
+        const labels=data.language==='en'?['Success','Failure','Ending']:['成功','失败','收束'];
+        const label = scene.endingType === 'win' ? labels[0] : scene.endingType === 'fail' ? labels[1] : labels[2];
         ending.textContent = label + '：' + (scene.endingText || '故事结束。');
         return;
       }
@@ -123,6 +128,7 @@ export function buildTextAdventureHtml(record: GameRecord, assetBase?: string) {
       });
     }
 
+    $('restart').onclick=()=>{sceneId=String(data.startingSceneId);render();};
     render();
   </script>
 </body>
@@ -148,172 +154,17 @@ export function buildSideScrollerGameData(record: GameRecord, assetBase?: string
   };
 }
 
-function fallbackSideScrollerHtml(record: GameRecord, assetBase?: string) {
-  const data = buildSideScrollerGameData(record, assetBase);
-  const dataJson = escapeJson(data);
-
-  return `<!DOCTYPE html>
-<html lang="${record.language}">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${data.title || "Side Scroller"}</title>
-  <style>
-    body { margin:0; background:#0b0f17; color:#e2e8f0; font-family:system-ui, -apple-system, Segoe UI, sans-serif; }
-    #hud { padding: 12px 16px; font-size: 14px; }
-    #game { display:block; margin:0 auto; background:#020617; border-top:1px solid #1f2937; }
-    .hint { color:#94a3b8; font-size:12px; margin-top:6px; }
-  </style>
-</head>
-<body>
-  <div id="hud">
-    <div style="font-weight:600">${data.title || "Side Scroller"}</div>
-    <div>${data.elevatorPitch || ""}</div>
-    <div class="hint">Controls: ←/→ move, ↑ jump, Z attack</div>
-  </div>
-  <canvas id="game" width="900" height="520"></canvas>
-
-  <script id="game-data" type="application/json">${dataJson}</script>
-  <script>
-    const data = JSON.parse(document.getElementById('game-data').textContent || '{}');
-    const canvas = document.getElementById('game');
-    const ctx = canvas.getContext('2d');
-    const W = canvas.width, H = canvas.height;
-
-    const assetByType = (type) => (data.assets || []).find(a => a.type === type) || null;
-    const playerAsset = assetByType('player');
-    const enemyAsset = assetByType('enemy') || assetByType('npc');
-    const bgAsset = assetByType('background');
-    const platformAsset = assetByType('platform') || assetByType('tile');
-
-    const images = {};
-    const toLoad = [playerAsset, enemyAsset, bgAsset, platformAsset].filter(Boolean);
-    let loaded = 0;
-
-    function loadImages() {
-      if (toLoad.length === 0) init();
-      toLoad.forEach((a) => {
-        const img = new Image();
-        img.onload = () => { loaded++; if (loaded === toLoad.length) init(); };
-        img.src = a.src;
-        images[a.type] = img;
-        if (a.type === 'npc' && !images.enemy) images.enemy = img;
-        if (a.type === 'tile' && !images.platform) images.platform = img;
-      });
-    }
-
-    const keys = new Set();
-    window.addEventListener('keydown', (e) => { keys.add(e.key); });
-    window.addEventListener('keyup', (e) => { keys.delete(e.key); });
-
-    const level = (data.levels || [])[0] || {};
-    const platforms = [];
-    const layout = Array.isArray(level.platformLayout) ? level.platformLayout : [];
-    layout.forEach((p) => {
-      const x = Math.max(0, Math.min(1, p.x)) * (W - 200);
-      const y = 80 + Math.max(0, Math.min(1, p.y)) * 320;
-      const w = 100 + Math.max(0.05, Math.min(1, p.width)) * 380;
-      platforms.push({ x, y, w, h: 20 });
-    });
-    platforms.push({ x: 0, y: H - 30, w: W, h: 30 });
-
-    const player = { x: 80, y: H - 120, w: 48, h: 48, vx: 0, vy: 0, onGround: false };
-    const enemies = Array.from({ length: 4 }).map((_, i) => ({ x: 420 + i * 120, y: H - 120, w: 36, h: 36, vx: (i % 2 === 0 ? 1 : -1) * 1.2 }));
-
-    function rectsOverlap(a, b) {
-      return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
-    }
-
-    function update() {
-      player.vx = 0;
-      if (keys.has('ArrowLeft')) player.vx = -3;
-      if (keys.has('ArrowRight')) player.vx = 3;
-      if (keys.has('ArrowUp') && player.onGround) { player.vy = -9; player.onGround = false; }
-
-      player.vy += 0.4;
-      player.x += player.vx;
-      player.y += player.vy;
-
-      player.onGround = false;
-      platforms.forEach((p) => {
-        if (rectsOverlap(player, p)) {
-          if (player.vy > 0) {
-            player.y = p.y - player.h;
-            player.vy = 0;
-            player.onGround = true;
-          }
-        }
-      });
-
-      enemies.forEach((e) => {
-        e.x += e.vx;
-        if (e.x < 0 || e.x + e.w > W) e.vx *= -1;
-        if (keys.has('z') || keys.has('Z')) {
-          const dx = e.x - player.x;
-          if (Math.abs(dx) < 60 && Math.abs(e.y - player.y) < 40) {
-            e.vx = dx > 0 ? 3 : -3;
-          }
-        }
-      });
-    }
-
-    function draw() {
-      ctx.clearRect(0, 0, W, H);
-      if (images.background) {
-        ctx.drawImage(images.background, 0, 0, W, H);
-      } else {
-        const g = ctx.createLinearGradient(0, 0, 0, H);
-        g.addColorStop(0, '#0b1020');
-        g.addColorStop(1, '#020617');
-        ctx.fillStyle = g;
-        ctx.fillRect(0, 0, W, H);
-      }
-
-      ctx.fillStyle = '#1f2937';
-      platforms.forEach((p) => {
-        if (images.platform) {
-          ctx.drawImage(images.platform, p.x, p.y, p.w, p.h);
-        } else {
-          ctx.fillRect(p.x, p.y, p.w, p.h);
-        }
-      });
-
-      if (images.player) ctx.drawImage(images.player, player.x, player.y, player.w, player.h);
-      else { ctx.fillStyle = '#7c3aed'; ctx.fillRect(player.x, player.y, player.w, player.h); }
-
-      enemies.forEach((e) => {
-        if (images.enemy) ctx.drawImage(images.enemy, e.x, e.y, e.w, e.h);
-        else { ctx.fillStyle = '#22c55e'; ctx.fillRect(e.x, e.y, e.w, e.h); }
-      });
-    }
-
-    function loop() {
-      update();
-      draw();
-      requestAnimationFrame(loop);
-    }
-
-    function init() {
-      loop();
-    }
-
-    loadImages();
-  </script>
-</body>
-</html>`;
-}
-
 export function buildSideScrollerHtml(record: GameRecord, assetBase?: string) {
-  const html = record.gameHtml?.trim();
-  if (html && /<html/i.test(html) && !/https?:\/\//i.test(html)) {
+  const html = record.gameHtml;
+  if (html && /<html/i.test(html)) {
     return assetBase ? rewriteAssetPaths(html, assetBase) : html;
   }
-  return fallbackSideScrollerHtml(record, assetBase);
+  throw new Error('Game HTML is not ready; generate a complete game first');
 }
 
-export async function buildZipBuffer(record: GameRecord) {
+export async function buildZipBuffer(record: GameRecord, version?: GameVersion) {
   const zip = new JSZip();
-  const html = record.mode === "text-adventure" ? buildTextAdventureHtml(record) : buildSideScrollerHtml(record);
+  const html = version?.entryHtml || (record.mode === "text-adventure" ? buildTextAdventureHtml(record) : buildSideScrollerHtml(record));
   zip.file("index.html", html);
 
   const assetFiles = new Set<string>();
@@ -326,7 +177,7 @@ export async function buildZipBuffer(record: GameRecord) {
   }
 
   for (const file of assetFiles) {
-    const buffer = await readAssetFile(record.id, file);
+    const buffer = version ? await readVersionAsset(version, file) : await readAssetFile(record.id, file);
     zip.file(`assets/${file}`, buffer);
   }
 
@@ -335,6 +186,7 @@ export async function buildZipBuffer(record: GameRecord) {
     : buildSideScrollerGameData(record);
 
   zip.file("game.json", JSON.stringify(gameData, null, 2));
+  zip.file('manifest.json', JSON.stringify({gameId: record.id, version: version?.id ?? null, entry: 'index.html', entrySha256:digest(html), assets: version?.assets ?? {}, verification: 'See improvement evidence; export does not establish human enjoyment'}, null, 2));
 
   return zip.generateAsync({ type: "nodebuffer" });
 }

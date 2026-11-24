@@ -1,3 +1,4 @@
+import { complete, cleanJson, providerRequest } from "./providers";
 import { GoogleGenAI, type GenerateContentResponse } from "@google/genai";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
@@ -52,6 +53,15 @@ export async function generateStructured<T extends z.ZodTypeAny>(opts: {
   schema: T;
   image?: { mimeType: string; data: string };
 }): Promise<z.infer<T>> {
+  if (/^(deepseek|qwen)\//.test(opts.model)) {
+    let feedback = "";
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const raw = await complete({ ...opts, json:true, prompt: `${opts.prompt}\nReturn ONLY valid JSON matching this schema:\n${JSON.stringify(zodToJsonSchema(opts.schema))}\n${feedback}` });
+      try { return opts.schema.parse(cleanJson(raw)); }
+      catch (error) { feedback = `Correct the previous validation failure: ${String(error).slice(0, 1800)}. Previous output: ${raw.slice(0, 10000)}`; }
+    }
+    throw new Error("Model JSON failed validation after three attempts");
+  }
   const ai = getGeminiClient();
   const jsonSchema = zodToJsonSchema(opts.schema, { name: "Response" });
 
@@ -118,6 +128,20 @@ export async function generateImage(opts: {
   prompt: string;
   image?: InlineImage;
 }): Promise<InlineImage> {
+  if (opts.model.startsWith("qwen/")) {
+    const data = await providerRequest(opts.model, "images/generations", {
+      prompt: opts.prompt, n: 1, size: "1024x1024", response_format: "b64_json",
+      ...(opts.image ? { image: `data:${opts.image.mimeType};base64,${opts.image.data}` } : {}),
+    });
+    const item = data.data?.[0];
+    if (item?.b64_json) return {mimeType: "image/png", data: item.b64_json};
+    if (item?.url && /^https:\/\//.test(item.url)) {
+      const res = await fetch(item.url, {signal: AbortSignal.timeout(60000)});
+      if (!res.ok) throw new Error("Generated image download failed");
+      return {mimeType: res.headers.get("content-type") || "image/png", data: Buffer.from(await res.arrayBuffer()).toString("base64")};
+    }
+    throw new Error("Image provider returned no image");
+  }
   const ai = getGeminiClient();
   const parts: any[] = [{ text: opts.prompt }];
   if (opts.image?.data && opts.image?.mimeType) {
@@ -142,6 +166,7 @@ export async function generateText(opts: {
   model: string;
   prompt: string;
 }): Promise<string> {
+  if (/^(deepseek|qwen)\//.test(opts.model)) return complete(opts);
   const ai = getGeminiClient();
   const resp = await ai.models.generateContent({
     model: opts.model,

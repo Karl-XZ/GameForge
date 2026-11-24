@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { ImprovementPanel } from "@/components/ImprovementPanel";
 import { useLocale, useTranslations } from 'next-intl';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label, Textarea, Tabs } from "@/components/ui";
 import { LanguageSelector } from "@/components/LanguageSelector";
@@ -51,8 +52,10 @@ export default function Home() {
   const [language, setLanguage] = React.useState<"zh" | "en">(() => (uiLocale === 'en' ? 'en' : 'zh'));
   const [prompt, setPrompt] = React.useState<string>(() => t('promptPlaceholder'));
   const [textModel, setTextModel] = React.useState<string>(TEXT_MODELS[0]);
+  const [assetMode,setAssetMode]=React.useState<'canvas'|'background'|'full'>('canvas');
   const [imageModel, setImageModel] = React.useState<string>(IMAGE_MODELS[0]);
 
+  const [availableModels,setAvailableModels]=React.useState({text:TEXT_MODELS,image:IMAGE_MODELS});
   const [gameId, setGameId] = React.useState<string | null>(null);
   const [outlineText, setOutlineText] = React.useState<string>("");
   const [scenesText, setScenesText] = React.useState<string>("");
@@ -86,10 +89,12 @@ export default function Home() {
     | { type: "step"; id: string; status: StepStatus; percent?: number; message?: string }
     | { type: "log"; ts?: string; level?: "info" | "warn" | "error"; message: string }
     | { type: "result"; result: { ok: boolean; gameId?: string } }
+    | { type: "game"; gameId: string }
     | { type: "fatal"; error: string };
 
   React.useEffect(() => {
     fetchGames();
+    fetch('/api/models').then(r=>r.json()).then(m=>{setAvailableModels(m);setTextModel(m.defaultText);setImageModel(m.defaultImage);}).catch(()=>{});
   }, []);
 
   async function fetchGames() {
@@ -104,7 +109,7 @@ export default function Home() {
     if (!ok) return;
     const res = await fetch(`/api/games/${id}`, { method: "DELETE" });
     if (!res.ok) {
-      setError(t('errors.deleteFailed'));
+      setError((await res.json().catch(()=>null))?.error || t('errors.deleteFailed'));
       return;
     }
     if (gameId === id) {
@@ -130,6 +135,7 @@ export default function Home() {
     setLanguage(record.language);
     setTextModel(record.textModel);
     setImageModel(record.imageModel);
+    const assetCount=Object.keys(record.images?.assets||{}).length;setAssetMode(assetCount===0?'canvas':assetCount===1?'background':'full');
     setPrompt(record.prompt ?? "");
     setOutlineText(record.outline ? JSON.stringify(record.outline, null, 2) : "");
     setScenesText(record.scenes ? JSON.stringify(record.scenes, null, 2) : "");
@@ -193,7 +199,7 @@ export default function Home() {
     const res = await fetch("/api/text/outline", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt, language, textModel, imageModel, gameId }),
+      body: JSON.stringify({ prompt, language, textModel, imageModel, gameId, visualMode:assetMode==='canvas'?'canvas':undefined,assetLimit:assetMode==='background'?1:undefined }),
     });
     const data = await res.json();
     if (!res.ok || !data.ok) {
@@ -389,7 +395,7 @@ export default function Home() {
     const res = await fetch("/api/side/plan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt, language, textModel, imageModel, gameId }),
+      body: JSON.stringify({ prompt, language, textModel, imageModel, gameId, visualMode:assetMode==='canvas'?'canvas':undefined,assetLimit:assetMode==='background'?1:undefined }),
     });
     const data = await res.json();
     if (!res.ok || !data.ok) {
@@ -600,6 +606,7 @@ export default function Home() {
       fd.set("prompt", prompt);
       fd.set("textModel", textModel);
       fd.set("imageModel", imageModel);
+      if(mode==="side-scroller"){if(assetMode==="canvas")fd.set("visualMode","canvas");if(assetMode==="background")fd.set("assetLimit","1");}
       if (gameId) fd.set("gameId", gameId);
 
       const res = await fetch("/api/generate-stream", { method: "POST", body: fd, signal: ac.signal });
@@ -628,7 +635,8 @@ export default function Home() {
             continue;
           }
 
-          if (evt.type === "init") {
+          if (evt.type === "game") {setGameId(evt.gameId);continue;}
+      if (evt.type === "init") {
             setProgress((p) => ({
               ...p,
               steps: evt.steps.map((s) => ({ id: s.id, title: s.title, status: "pending" as StepStatus })),
@@ -745,7 +753,7 @@ export default function Home() {
                   value={textModel}
                   onChange={(e) => setTextModel(e.target.value)}
                 >
-                  {TEXT_MODELS.map((m) => (
+                  {availableModels.text.map((m) => (
                     <option key={m} value={m}>
                       {m}
                     </option>
@@ -759,7 +767,7 @@ export default function Home() {
                   value={imageModel}
                   onChange={(e) => setImageModel(e.target.value)}
                 >
-                  {IMAGE_MODELS.map((m) => (
+                  {availableModels.image.map((m) => (
                     <option key={m} value={m}>
                       {m}
                     </option>
@@ -768,6 +776,13 @@ export default function Home() {
               </div>
             </div>
 
+            {mode === 'side-scroller' && <label className="block text-sm">{uiLocale==='zh'?'视觉素材（影响生成耗时与费用）':'Visual assets (affects time and cost)'}
+              <select aria-label={uiLocale==='zh'?'视觉素材':'Visual assets'} className="mt-2 w-full rounded-xl border border-border bg-panel2 px-3 py-2" value={assetMode} onChange={e=>setAssetMode(e.target.value as any)}>
+                <option value="canvas">{uiLocale==='zh'?'原生绘制：优先验证玩法，无需生图':'Canvas: test gameplay without image calls'}</option>
+                <option value="background">{uiLocale==='zh'?'生成一张背景，其余原生绘制':'One generated background, Canvas characters'}</option>
+                <option value="full">{uiLocale==='zh'?'生成完整素材清单（耗时和费用较高）':'Generate full asset list (higher time/cost)'}</option>
+              </select>
+            </label>}
             <div className="flex flex-wrap gap-3">
               <Button onClick={handleOneClick} disabled={streaming} className="flex-1">
                 {streaming ? t('generating') : t('generateOneClick')}
@@ -1054,6 +1069,7 @@ export default function Home() {
         )}
       </section>
 
+    {gameId && mode === "side-scroller" && <ImprovementPanel key={gameId} gameId={gameId} locale={uiLocale} onApply={()=>loadGame(gameId)}/>}
     </main>
   );
 }

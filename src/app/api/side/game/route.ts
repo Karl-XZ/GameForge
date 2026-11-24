@@ -1,5 +1,5 @@
 ﻿import { NextResponse } from "next/server";
-import { generateText } from "@/lib/gemini";
+import { generatePlayableHtml } from "@/lib/playableHtml";
 import { buildSideScrollerGameHtmlPrompt } from "@/lib/prompts";
 import { loadGameRecord, saveGameRecord } from "@/lib/store";
 
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
       file: meta.file,
     }));
 
-    const html = await generateText({
+    const html = await generatePlayableHtml({
       model: record.textModel,
       prompt: buildSideScrollerGameHtmlPrompt({ plan, assets }),
     });

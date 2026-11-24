@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 
     const scenes = await generateStructured({
       model: record.textModel,
-      prompt: buildTextAdventureScenesPrompt({ outline }),
+      prompt: buildTextAdventureScenesPrompt({ outline, userPrompt:record.prompt }),
       schema: TextAdventureScenesSchema,
     });
 

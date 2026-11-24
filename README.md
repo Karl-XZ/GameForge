@@ -216,3 +216,7 @@ Set environment variables in your Vercel project settings:
 2. **Adaptive Chroma Keying**: Real-world generative outputs contain varying hues of green. Sampling border pixels to determine the exact background chroma value followed by a two-pass threshold (strict to relaxed) yields clean sprite boundaries.
 3. **Cache-Busting for Deterministic Regeneration**: Web browsers and proxy layers aggressively cache image URLs. Enforcing unique request stamps and nonces on single-asset retries guarantees that regenerated assets immediately reflect user edits.
 4. **Structured JSON Validation**: Enforcing Zod schema verification on all LLM outputs prevents downstream pipeline failures, ensuring that game logic and asset keys remain strictly aligned.
+
+## 试玩与自动改进
+
+支持真实模型生成、冻结版本、隔离试玩、双顺序盲评、预算控制和人工选用最佳版本。安装与边界见 [改进模块操作说明](docs/IMPROVEMENT.md)，实际验证见 [测试报告](docs/TEST_REPORT.md)。

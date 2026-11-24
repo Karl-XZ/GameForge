@@ -104,6 +104,7 @@ export async function POST(req: Request) {
     for (const asset of assetsInOrder) {
       const meta = assetMeta[asset.id];
       if (!meta) continue;
+      if (!force && assetFiles[asset.id] && await readAssetFile(gameId, meta.file).catch(() => null)) continue;
       const needsCutout = !!asset.needsCutout;
       const cleaned = String(asset.prompt ?? "");
       let prompt = needsCutout ? withGreenScreen(cleaned) : cleaned;
@@ -169,6 +170,7 @@ export async function POST(req: Request) {
 
       await saveAssetFile(gameId, meta.file, buffer);
       assetFiles[asset.id] = meta.file;
+      await saveGameRecord(gameId, {plan: planToSave, assetMeta, images:{...(record.images ?? {}),assets:{...assetFiles}}});
 
       // Cache fronts so subsequent variants can reuse without extra FS reads.
       if (isChar && isFrontId(String(asset.id))) {

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { generateText } from "@/lib/gemini";
+import { generatePlayableHtml } from "@/lib/playableHtml";
 import { loadGameRecord, saveGameRecord } from "@/lib/store";
 
 export const runtime = "nodejs";
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
       `User instruction:\n${instruction}\n\n` +
       `Current HTML:\n${currentHtml}`;
 
-    const updated = await generateText({ model, prompt });
+    const updated = await generatePlayableHtml({ model, prompt });
     const cleaned = updated.trim();
     if (!cleaned.toLowerCase().includes("<html")) {
       return NextResponse.json({ ok: false, error: "Model did not return a full HTML document." }, { status: 500 });
