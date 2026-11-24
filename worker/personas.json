@@ -1,0 +1,608 @@
+{
+ "archetypes": {
+  "newbie": "萌新",
+  "speed": "速通玩家",
+  "hardcore": "硬核玩家",
+  "casual": "休闲摸鱼党",
+  "story": "剧情氛围党",
+  "artsy": "美术控",
+  "kol": "游戏博主",
+  "retro": "怀旧玩家",
+  "explorer": "探索党",
+  "clumsy": "手残党"
+ },
+ "people": [
+  {
+   "id": "p0",
+   "arch": "newbie",
+   "archLabel": "萌新",
+   "name": "小雨",
+   "bio": "16岁高中生，第一次玩横版动作游戏",
+   "style": "活泼，爱用网络梗",
+   "follows": [
+    "p1",
+    "p12",
+    "p27",
+    "p4",
+    "p6"
+   ]
+  },
+  {
+   "id": "p1",
+   "arch": "newbie",
+   "archLabel": "萌新",
+   "name": "阿豆",
+   "bio": "22岁大学新生，平时只玩消除类",
+   "style": "礼貌，常说“这个我不太会”",
+   "follows": [
+    "p14",
+    "p2",
+    "p25",
+    "p31",
+    "p32"
+   ]
+  },
+  {
+   "id": "p2",
+   "arch": "newbie",
+   "archLabel": "萌新",
+   "name": "米粒",
+   "bio": "12岁小学生，用妈妈的电脑偷偷玩",
+   "style": "句子很短，感叹号多",
+   "follows": [
+    "p0",
+    "p25",
+    "p39",
+    "p4",
+    "p7"
+   ]
+  },
+  {
+   "id": "p3",
+   "arch": "newbie",
+   "archLabel": "萌新",
+   "name": "蓝莓",
+   "bio": "30岁宝妈，碎片时间玩两局",
+   "style": "温和，关心是否容易上手",
+   "follows": [
+    "p2",
+    "p22",
+    "p26",
+    "p32",
+    "p5"
+   ]
+  },
+  {
+   "id": "p4",
+   "arch": "speed",
+   "archLabel": "速通玩家",
+   "name": "秒针",
+   "bio": "24岁程序员，速通社区常驻",
+   "style": "语速快，爱报帧数和秒数",
+   "follows": [
+    "p20",
+    "p26",
+    "p37",
+    "p7",
+    "p8"
+   ]
+  },
+  {
+   "id": "p5",
+   "arch": "speed",
+   "archLabel": "速通玩家",
+   "name": "疾风",
+   "bio": "19岁电竞专业学生",
+   "style": "好胜，喜欢挑战极限路线",
+   "follows": [
+    "p14",
+    "p26",
+    "p32",
+    "p39",
+    "p7"
+   ]
+  },
+  {
+   "id": "p6",
+   "arch": "speed",
+   "archLabel": "速通玩家",
+   "name": "零点七",
+   "bio": "27岁剪辑师，录速通视频",
+   "style": "冷静，关注路线和跳跃判定",
+   "follows": [
+    "p20",
+    "p21",
+    "p25",
+    "p27",
+    "p4"
+   ]
+  },
+  {
+   "id": "p7",
+   "arch": "speed",
+   "archLabel": "速通玩家",
+   "name": "Rush",
+   "bio": "21岁留学生，中英混杂",
+   "style": "直接，讨厌无意义的等待",
+   "follows": [
+    "p1",
+    "p23",
+    "p24",
+    "p25",
+    "p6"
+   ]
+  },
+  {
+   "id": "p8",
+   "arch": "hardcore",
+   "archLabel": "硬核玩家",
+   "name": "铁头",
+   "bio": "31岁工程师，通关过所有魂系游戏",
+   "style": "毒舌，嫌弃一切“太简单”",
+   "follows": [
+    "p1",
+    "p22",
+    "p27",
+    "p37",
+    "p9"
+   ]
+  },
+  {
+   "id": "p9",
+   "arch": "hardcore",
+   "archLabel": "硬核玩家",
+   "name": "苦行僧",
+   "bio": "26岁研究生，享受失败一百次",
+   "style": "理性，喜欢讨论难度曲线",
+   "follows": [
+    "p10",
+    "p27",
+    "p29",
+    "p34",
+    "p36"
+   ]
+  },
+  {
+   "id": "p10",
+   "arch": "hardcore",
+   "archLabel": "硬核玩家",
+   "name": "钢丝",
+   "bio": "29岁设计师，追求无伤通关",
+   "style": "挑剔，关注判定是否公平",
+   "follows": [
+    "p15",
+    "p16",
+    "p24",
+    "p8"
+   ]
+  },
+  {
+   "id": "p11",
+   "arch": "hardcore",
+   "archLabel": "硬核玩家",
+   "name": "老K",
+   "bio": "35岁街机老炮",
+   "style": "豪爽，爱说“当年我们”",
+   "follows": [
+    "p16",
+    "p24",
+    "p29",
+    "p35",
+    "p8"
+   ]
+  },
+  {
+   "id": "p12",
+   "arch": "casual",
+   "archLabel": "休闲摸鱼党",
+   "name": "咸鱼",
+   "bio": "28岁上班族，午休摸鱼玩",
+   "style": "佛系，最怕卡关",
+   "follows": [
+    "p10",
+    "p14",
+    "p27",
+    "p28",
+    "p31"
+   ]
+  },
+  {
+   "id": "p13",
+   "arch": "casual",
+   "archLabel": "休闲摸鱼党",
+   "name": "奶茶",
+   "bio": "23岁运营，边追剧边玩",
+   "style": "随意，喜欢可爱的东西",
+   "follows": [
+    "p12",
+    "p2",
+    "p27",
+    "p33",
+    "p34"
+   ]
+  },
+  {
+   "id": "p14",
+   "arch": "casual",
+   "archLabel": "休闲摸鱼党",
+   "name": "躺平哥",
+   "bio": "32岁销售，通勤地铁上玩",
+   "style": "懒洋洋，讨厌复杂操作",
+   "follows": [
+    "p15",
+    "p2",
+    "p25",
+    "p35",
+    "p6"
+   ]
+  },
+  {
+   "id": "p15",
+   "arch": "casual",
+   "archLabel": "休闲摸鱼党",
+   "name": "花卷",
+   "bio": "25岁护士，下夜班放松",
+   "style": "温柔，喜欢轻松反馈",
+   "follows": [
+    "p10",
+    "p14",
+    "p25",
+    "p27",
+    "p35"
+   ]
+  },
+  {
+   "id": "p16",
+   "arch": "story",
+   "archLabel": "剧情氛围党",
+   "name": "夜航",
+   "bio": "27岁编剧，在意世界观",
+   "style": "文艺，爱用比喻",
+   "follows": [
+    "p19",
+    "p2",
+    "p24",
+    "p26",
+    "p33"
+   ]
+  },
+  {
+   "id": "p17",
+   "arch": "story",
+   "archLabel": "剧情氛围党",
+   "name": "青柠",
+   "bio": "20岁文学系学生",
+   "style": "细腻，注意文字和氛围",
+   "follows": [
+    "p18",
+    "p26",
+    "p28",
+    "p36"
+   ]
+  },
+  {
+   "id": "p18",
+   "arch": "story",
+   "archLabel": "剧情氛围党",
+   "name": "旧书",
+   "bio": "34岁图书管理员",
+   "style": "慢条斯理，喜欢余韵",
+   "follows": [
+    "p0",
+    "p19",
+    "p26",
+    "p5",
+    "p8"
+   ]
+  },
+  {
+   "id": "p19",
+   "arch": "story",
+   "archLabel": "剧情氛围党",
+   "name": "雾岛",
+   "bio": "24岁插画师",
+   "style": "感性，在意情绪节奏",
+   "follows": [
+    "p16",
+    "p24",
+    "p31",
+    "p36",
+    "p39"
+   ]
+  },
+  {
+   "id": "p20",
+   "arch": "artsy",
+   "archLabel": "美术控",
+   "name": "像素",
+   "bio": "26岁像素画师",
+   "style": "专业，关注配色和动效",
+   "follows": [
+    "p2",
+    "p21",
+    "p24",
+    "p3",
+    "p32"
+   ]
+  },
+  {
+   "id": "p21",
+   "arch": "artsy",
+   "archLabel": "美术控",
+   "name": "霓虹",
+   "bio": "22岁设计学生",
+   "style": "热情，爱截图",
+   "follows": [
+    "p18",
+    "p22",
+    "p27",
+    "p33",
+    "p34"
+   ]
+  },
+  {
+   "id": "p22",
+   "arch": "artsy",
+   "archLabel": "美术控",
+   "name": "调色盘",
+   "bio": "30岁UI设计师",
+   "style": "挑剔，在意界面层级",
+   "follows": [
+    "p13",
+    "p14",
+    "p20",
+    "p27",
+    "p29"
+   ]
+  },
+  {
+   "id": "p23",
+   "arch": "artsy",
+   "archLabel": "美术控",
+   "name": "光栅",
+   "bio": "28岁动效师",
+   "style": "关注打击感与粒子",
+   "follows": [
+    "p13",
+    "p17",
+    "p21",
+    "p24",
+    "p27"
+   ]
+  },
+  {
+   "id": "p24",
+   "arch": "kol",
+   "archLabel": "游戏博主",
+   "name": "阿树测评",
+   "bio": "29岁B站游戏UP主，30万粉",
+   "style": "有梗，善于总结亮点",
+   "follows": [
+    "p0",
+    "p21",
+    "p26",
+    "p35"
+   ]
+  },
+  {
+   "id": "p25",
+   "arch": "kol",
+   "archLabel": "游戏博主",
+   "name": "喵喵试玩",
+   "bio": "24岁直播主播",
+   "style": "夸张，关注节目效果",
+   "follows": [
+    "p1",
+    "p27",
+    "p28",
+    "p8"
+   ]
+  },
+  {
+   "id": "p26",
+   "arch": "kol",
+   "archLabel": "游戏博主",
+   "name": "独立观察",
+   "bio": "33岁独立游戏媒体编辑",
+   "style": "专业，横向对比",
+   "follows": [
+    "p12",
+    "p13",
+    "p15",
+    "p27"
+   ]
+  },
+  {
+   "id": "p27",
+   "arch": "kol",
+   "archLabel": "游戏博主",
+   "name": "一分钟游戏",
+   "bio": "26岁短视频博主",
+   "style": "抓重点，讲究前三秒",
+   "follows": [
+    "p26",
+    "p29",
+    "p3",
+    "p9"
+   ]
+  },
+  {
+   "id": "p28",
+   "arch": "retro",
+   "archLabel": "怀旧玩家",
+   "name": "红白机",
+   "bio": "38岁老玩家，从FC时代玩起",
+   "style": "怀旧，拿经典作比较",
+   "follows": [
+    "p13",
+    "p2",
+    "p22",
+    "p24",
+    "p31"
+   ]
+  },
+  {
+   "id": "p29",
+   "arch": "retro",
+   "archLabel": "怀旧玩家",
+   "name": "卡带",
+   "bio": "36岁中学老师",
+   "style": "温和，看重手感",
+   "follows": [
+    "p23",
+    "p26",
+    "p27",
+    "p31",
+    "p34"
+   ]
+  },
+  {
+   "id": "p30",
+   "arch": "retro",
+   "archLabel": "怀旧玩家",
+   "name": "街机厅",
+   "bio": "41岁个体户",
+   "style": "豪爽，喜欢简单直接",
+   "follows": [
+    "p19",
+    "p26",
+    "p28",
+    "p37",
+    "p5"
+   ]
+  },
+  {
+   "id": "p31",
+   "arch": "retro",
+   "archLabel": "怀旧玩家",
+   "name": "八位",
+   "bio": "33岁芯片工程师",
+   "style": "较真，关注输入延迟",
+   "follows": [
+    "p20",
+    "p25",
+    "p28",
+    "p4",
+    "p9"
+   ]
+  },
+  {
+   "id": "p32",
+   "arch": "explorer",
+   "archLabel": "探索党",
+   "name": "地图控",
+   "bio": "25岁测绘员",
+   "style": "细心，爱找隐藏区域",
+   "follows": [
+    "p14",
+    "p24",
+    "p27",
+    "p33"
+   ]
+  },
+  {
+   "id": "p33",
+   "arch": "explorer",
+   "archLabel": "探索党",
+   "name": "好奇猫",
+   "bio": "19岁高中生",
+   "style": "什么都想点一点",
+   "follows": [
+    "p19",
+    "p2",
+    "p25",
+    "p34",
+    "p38"
+   ]
+  },
+  {
+   "id": "p34",
+   "arch": "explorer",
+   "archLabel": "探索党",
+   "name": "边界线",
+   "bio": "28岁测试工程师",
+   "style": "专找穿墙和卡点",
+   "follows": [
+    "p17",
+    "p25",
+    "p27",
+    "p35"
+   ]
+  },
+  {
+   "id": "p35",
+   "arch": "explorer",
+   "archLabel": "探索党",
+   "name": "收集癖",
+   "bio": "27岁会计",
+   "style": "必须全收集",
+   "follows": [
+    "p0",
+    "p25",
+    "p32",
+    "p37",
+    "p8"
+   ]
+  },
+  {
+   "id": "p36",
+   "arch": "clumsy",
+   "archLabel": "手残党",
+   "name": "手抖",
+   "bio": "29岁文员，反应偏慢",
+   "style": "自嘲，容易沮丧",
+   "follows": [
+    "p11",
+    "p21",
+    "p22",
+    "p26",
+    "p38"
+   ]
+  },
+  {
+   "id": "p37",
+   "arch": "clumsy",
+   "archLabel": "手残党",
+   "name": "慢半拍",
+   "bio": "34岁厨师",
+   "style": "直率，讨厌惩罚太重",
+   "follows": [
+    "p12",
+    "p15",
+    "p18",
+    "p24",
+    "p39"
+   ]
+  },
+  {
+   "id": "p38",
+   "arch": "clumsy",
+   "archLabel": "手残党",
+   "name": "左手",
+   "bio": "21岁学生，键盘不熟",
+   "style": "困惑，常问“怎么跳”",
+   "follows": [
+    "p20",
+    "p21",
+    "p27",
+    "p31",
+    "p37"
+   ]
+  },
+  {
+   "id": "p39",
+   "arch": "clumsy",
+   "archLabel": "手残党",
+   "name": "土豆",
+   "bio": "31岁仓管",
+   "style": "憨厚，失败三次就想放弃",
+   "follows": [
+    "p21",
+    "p24",
+    "p31",
+    "p38",
+    "p8"
+   ]
+  }
+ ]
+}

@@ -9,7 +9,7 @@ import { withGameLock } from './lock';
 import { configuredModels, parseModel } from './providers';
 import { z } from 'zod';
 
-const budgetsSchema=z.object({rounds:z.number().int().min(1).max(5).default(3),episodes:z.number().int().min(1).max(3).default(3),calls:z.number().int().min(4).max(60).default(30),minutes:z.number().int().min(1).max(60).default(30)});
+const budgetsSchema=z.object({rounds:z.number().int().min(1).max(5).default(3),episodes:z.number().int().min(1).max(3).default(3),calls:z.number().int().min(4).max(80).default(30),minutes:z.number().int().min(1).max(90).default(30),generations:z.number().int().min(1).max(5).default(3),children:z.number().int().min(1).max(3).default(2)});
 export const runDir=(gameId:string,runId:string)=>path.join(dataRoot(),safeId(gameId),'runs',safeId(runId));
 const linuxPath=(file:string)=>file.replace(/^([A-Za-z]):[\\/]/,(_,letter)=>`/mnt/${letter.toLowerCase()}/`).replace(/\\/g,'/');
 
@@ -36,8 +36,10 @@ async function launch(directory:string) {
 export async function createRun(gameId:string,body:any) {
   if(process.env.VERCEL || process.env.KV_REST_API_URL) throw new Error('Improvement requires persistent local storage and an independent Linux/Docker worker');
   const budgets=budgetsSchema.parse(body.budgets||{});
-  const kind=z.enum(['improve','evaluate']).parse(body.kind||'improve');
+  const kind=z.enum(['improve','evaluate','evolve']).parse(body.kind||'improve');
   const model=String(body.model||configuredModels().defaultText);parseModel(model);
+  const strongJudge=configuredModels().text.includes('deepseek/deepseek-v4-pro')&&model.startsWith('deepseek/')?'deepseek/deepseek-v4-pro':model;
+  const reviewModel=String(body.reviewModel||strongJudge);parseModel(reviewModel);
   const goal=String(body.goal||'Improve goal clarity, input response, fairness, pacing and recovery without changing the core game.').slice(0,4000);
   const constraints=String(body.constraints||'Keep the genre, core loop, existing assets and genuine challenge.').slice(0,4000);
   const requestId=safeId(String(body.requestId||randomUUID()));
@@ -55,8 +57,8 @@ export async function createRun(gameId:string,body:any) {
     await fs.writeFile(path.join(directory,'baseline','index.html'),html);
     for(const file of Object.keys(base.assets)) await fs.writeFile(path.join(directory,'baseline','assets',file),await readVersionAsset(base,file));
     const feedback=await fs.readFile(path.join(dataRoot(),gameId,'feedback.json'),'utf8').then(JSON.parse).catch(()=>[]);
-    await atomicJson(path.join(directory,'input.json'),{gameId,baseVersion:base.id,baseHash:digest(html),assets:base.assets,goal,constraints,budgets,model,feedback,kind});
-    const state={id:requestId,gameId,baseVersion:base.id,status:'queued',phase:'readiness',createdAt:new Date().toISOString(),goal,constraints,budgets,model,kind};
+    await atomicJson(path.join(directory,'input.json'),{gameId,baseVersion:base.id,baseHash:digest(html),assets:base.assets,goal,constraints,budgets,model,reviewModel,feedback,kind,language:base.record.language||'zh',title:base.record.plan?.title||base.record.prompt?.slice(0,40)||''});
+    const state={id:requestId,gameId,baseVersion:base.id,status:'queued',phase:'readiness',createdAt:new Date().toISOString(),goal,constraints,budgets,model,reviewModel,kind};
     await atomicJson(path.join(directory,'state.json'),state);
     try {await launch(directory);}catch(e){await atomicJson(path.join(directory,'state.json'),{...state,status:'failed',error:'Worker could not start'});throw e;}
     return state;
@@ -125,6 +127,16 @@ export async function getRun(gameId:string,id:string) {
         if(digest(html)!==round.candidate.sourceHash) throw new Error('Candidate evidence/source mismatch');
         versions[name]=await derivedVersion(base,html,`${round.promoted?'retained':'rejected'} candidate, run ${id}, round ${round.round}`);
       }
+      for(const species of state.evolution?.species||[]) {
+        if(species.status!=='alive' || !species.source || species.id==='s0') continue;
+        await verifyEvidence(directory,species.evidence);
+        const parts=String(species.source).split('/');
+        if(parts.length!==2 || parts[0]!=='species') throw new Error('Invalid species source');
+        const html=await fs.readFile(path.join(directory,'species',safeId(parts[1]),'index.html'),'utf8');
+        if(digest(html)!==species.sourceHash) throw new Error('Species evidence/source mismatch');
+        versions[species.id]=await derivedVersion(base,html,`evolved species ${species.name||species.id} · gen ${species.gen} · run ${id}`);
+      }
+      if(state.evolution) versions.s0=state.baseVersion;
     });
   }
   const evidence=await fs.readdir(path.join(directory,'evidence'),{recursive:true,withFileTypes:true}).catch(()=>[]);

@@ -5,7 +5,7 @@ export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElemen
   return (
     <div
       className={cn(
-        "rounded-2xl border border-border bg-panel/70 shadow-glow backdrop-blur",
+        "rounded-2xl glass shadow-glow",
         className
       )}
       {...props}
@@ -18,7 +18,7 @@ export function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDiv
 }
 
 export function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h2 className={cn("text-lg font-semibold", className)} {...props} />;
+  return <h2 className={cn("font-serif text-xl font-semibold tracking-wide", className)} {...props} />;
 }
 
 export function CardDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
@@ -35,8 +35,8 @@ export function Button(
   }
 ) {
   const styles = {
-    primary: "bg-primary text-black hover:brightness-110",
-    ghost: "bg-white/0 hover:bg-white/5 text-text border border-border",
+    primary: "bg-primary text-[#04211c] font-semibold hover:brightness-110 shadow-teal",
+    ghost: "bg-white/0 hover:bg-white/5 hover:border-primary/40 text-text border border-border",
     danger: "bg-danger text-black hover:brightness-110",
   }[variant];
 
@@ -115,7 +115,7 @@ export function Tabs({
             onClick={() => onChange(t.key)}
             className={cn(
               "relative rounded-xl px-3 py-2 text-sm transition",
-              active ? "bg-white/10 text-text" : "text-muted hover:bg-white/5"
+              active ? "bg-primary/15 text-primary shadow-[inset_0_0_0_1px_rgba(94,234,212,.35)]" : "text-muted hover:bg-white/5"
             )}
           >
             <span className="flex items-center gap-2">

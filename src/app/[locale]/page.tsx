@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { ImprovementPanel } from "@/components/ImprovementPanel";
+import { Starfield } from "@/components/darwin/Starfield";
+import { DarwinHub, type HubTab } from "@/components/darwin/DarwinHub";
 import { useLocale, useTranslations } from 'next-intl';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label, Textarea, Tabs } from "@/components/ui";
 import { LanguageSelector } from "@/components/LanguageSelector";
@@ -21,6 +23,7 @@ type GameSummary = {
   createdAt: string;
   updatedAt: string;
   title?: string;
+  prompt?: string;
 };
 
 const TEXT_MODELS = [
@@ -48,7 +51,10 @@ export default function Home() {
   // UI locale (from route: /[locale])
   const uiLocale = useLocale() as 'en' | 'zh';
 
-  const [mode, setMode] = React.useState<Mode>("text-adventure");
+  const [mode, setMode] = React.useState<Mode>("side-scroller");
+  const [tab, setTab] = React.useState<"forge" | HubTab>("forge");
+  const [autoEvolve, setAutoEvolve] = React.useState(true);
+  const [stats, setStats] = React.useState<any>(null);
   const [language, setLanguage] = React.useState<"zh" | "en">(() => (uiLocale === 'en' ? 'en' : 'zh'));
   const [prompt, setPrompt] = React.useState<string>(() => t('promptPlaceholder'));
   const [textModel, setTextModel] = React.useState<string>(TEXT_MODELS[0]);
@@ -94,6 +100,7 @@ export default function Home() {
 
   React.useEffect(() => {
     fetchGames();
+    fetch('/api/evolve').then(r=>r.json()).then(setStats).catch(()=>{});
     fetch('/api/models').then(r=>r.json()).then(m=>{setAvailableModels(m);setTextModel(m.defaultText);setImageModel(m.defaultImage);}).catch(()=>{});
   }, []);
 
@@ -650,6 +657,10 @@ export default function Home() {
             if (evt.result?.gameId) {
               setGameId(evt.result.gameId);
               await loadGame(evt.result.gameId);
+              if (autoEvolve && mode === "side-scroller") {
+                const r = await fetch(`/api/improve/${evt.result.gameId}`, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({kind: "evolve", requestId: crypto.randomUUID(), goal: uiLocale === 'zh' ? '让新玩家更快理解目标，跳跃手感更好，节奏更紧凑，同时让游戏更有个性。' : 'Clearer goals, better jump feel, tighter pacing, more personality.', budgets: {generations: 3, children: 2, calls: 44, minutes: 60, episodes: 3}})});
+                if (r.ok) setTab("galaxy"); else pushLog("warn", (await r.json().catch(() => null))?.error || "evolution did not start");
+              }
             }
           } else if (evt.type === "fatal") {
             setError(evt.error);
@@ -694,21 +705,42 @@ export default function Home() {
   const assetList = Array.isArray(parsedPlan?.assets) ? parsedPlan.assets : [];
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-10">
-      <header className="mb-8 space-y-3 flex justify-between items-start">
-        <div className="space-y-3">
-          <div className="inline-flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-accent" />
-            <span className="text-sm text-text/70">{t('subtitle')}</span>
-          </div>
-          <h1 className="text-3xl font-semibold tracking-tight">{t('title')}</h1>
-          <p className="max-w-3xl text-text/80">
-            {t('description')}
-          </p>
+    <main className="mx-auto max-w-[1520px] px-6 pb-16 pt-6 md:px-10">
+      <Starfield />
+      <header className="mb-8 flex flex-wrap items-center justify-between gap-6">
+        <div className="flex items-center gap-10">
+          <button onClick={() => setTab("forge")} className="text-left">
+            <div className="font-serif text-[26px] font-semibold tracking-[0.18em] text-white">GameForge</div>
+            <div className="label-mono mt-0.5 text-[10px]">{uiLocale === 'zh' ? '游戏锻造 · 达尔文进化' : 'FORGE · PLAY · REVIEW · EVOLVE'}</div>
+          </button>
+          <nav className="flex flex-wrap gap-1">
+            {([["forge", "工坊", "Forge"], ["galaxy", "星系", "Galaxy"], ["specimen", "标本", "Specimen"], ["cabinet", "标本柜", "Cabinet"], ["observatory", "观察台", "Observatory"], ["method", "方法", "Method"]] as const).map(([key, zh, en]) => (
+              <button key={key} onClick={() => setTab(key as any)} className={`relative px-3 py-2 font-serif text-[15px] tracking-[0.2em] transition ${tab === key ? 'text-white' : 'text-muted hover:text-text'}`}>
+                {uiLocale === 'zh' ? zh : en}
+                {tab === key && <span className="absolute inset-x-3 -bottom-0.5 h-[2px] rounded-full bg-primary shadow-teal" />}
+              </button>
+            ))}
+          </nav>
         </div>
-        <LanguageSelector />
+        <div className="flex items-center gap-6">
+          {stats?.ok && <div className="hidden text-right font-mono text-[11px] leading-5 tracking-[0.12em] text-muted lg:block">
+            <div><b className="text-text">{stats.games}</b> {uiLocale === 'zh' ? '款游戏' : 'games'} · <b className="text-text">{stats.species}</b> {uiLocale === 'zh' ? '个物种' : 'species'} · <b className="text-text">{stats.alive}</b> {uiLocale === 'zh' ? '存活' : 'alive'}</div>
+            <div><b className="text-text">{stats.calls}</b> {uiLocale === 'zh' ? '次模型调用' : 'model calls'} · <b className="text-text">{stats.likes}</b> {uiLocale === 'zh' ? '次真人选择' : 'human picks'}</div>
+          </div>}
+          <LanguageSelector />
+        </div>
       </header>
 
+      {tab !== "forge" && <DarwinHub gameId={gameId} games={games} onPickGame={async (id) => { await loadGame(id); }} locale={uiLocale} tab={tab as HubTab} setTab={setTab as any} onApplied={() => gameId && loadGame(gameId)} gameTitle={(parseJson<any>(planText)?.title) || prompt.slice(0, 40)} />}
+
+      {tab === "forge" && <>
+      <section className="fade-up mb-10 grid items-end gap-6 lg:grid-cols-[1.3fr_1fr]">
+        <div>
+          <div className="label-mono">{uiLocale === 'zh' ? '一句话 → 可玩游戏 → 真实试玩 → 盲评 → 自然选择' : 'One sentence → playable game → real playtests → blind reviews → natural selection'}</div>
+          <h1 className="mt-3 font-serif text-5xl font-semibold leading-[1.15] text-white md:text-6xl">{uiLocale === 'zh' ? <>一句话锻造游戏，<br/><span className="text-glow text-primary">再让它自己进化。</span></> : <>Forge a game from one sentence,<br/><span className="text-glow text-primary">then let it evolve.</span></>}</h1>
+        </div>
+        <p className="max-w-xl text-[15px] leading-7 text-text/75">{uiLocale === 'zh' ? 'GameForge 把你的想法变成能离线运行的 HTML 游戏；达尔文进化让 AI 玩家在隔离沙箱里真实按键试玩，双顺序盲评，模拟玩家社会发帖弃坑，只有赢下证据的后代才能继续繁衍。' : 'GameForge turns ideas into offline HTML games; Darwin Evolution lets AI players really play them in a sandbox, runs reversed blind reviews and a simulated player society, and only evidence-backed offspring reproduce.'}</p>
+      </section>
       <div className="grid gap-6 md:grid-cols-[420px_1fr]">
         <Card>
           <CardHeader>
@@ -783,8 +815,12 @@ export default function Home() {
                 <option value="full">{uiLocale==='zh'?'生成完整素材清单（耗时和费用较高）':'Generate full asset list (higher time/cost)'}</option>
               </select>
             </label>}
+            {mode === 'side-scroller' && <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-primary/25 bg-primary/5 p-3 text-sm">
+              <input type="checkbox" className="mt-1 accent-[#5eead4]" checked={autoEvolve} onChange={e => setAutoEvolve(e.target.checked)} />
+              <span><span className="font-medium text-primary">{uiLocale === 'zh' ? '生成后立即开始达尔文进化' : 'Start Darwin evolution right after generation'}</span><br /><span className="text-xs text-muted">{uiLocale === 'zh' ? '3 代 × 每代 2 个后代 · AI 真实试玩 · 双盲评 · 玩家社会 · 约 44 次模型调用' : '3 generations × 2 children · real AI playtests · blind reviews · player society · ~44 calls'}</span></span>
+            </label>}
             <div className="flex flex-wrap gap-3">
-              <Button onClick={handleOneClick} disabled={streaming} className="flex-1">
+              <Button onClick={handleOneClick} disabled={streaming} className="flex-1 py-3 text-base">
                 {streaming ? t('generating') : t('generateOneClick')}
               </Button>
               {streaming ? (
@@ -1046,19 +1082,21 @@ export default function Home() {
         </Card>
       </div>
 
-      <section className="mt-8 rounded-2xl border border-border bg-panel2 p-4">
-        <div className="font-medium mb-3">{t('history.title')}</div>
+      <section className="mt-10">
+        <div className="label-mono mb-4">{t('history.title')}</div>
         {games.length === 0 ? (
           <div className="text-xs text-text/70">{t('history.noRecords')}</div>
         ) : (
-          <div className="grid gap-2">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {games.map((g) => (
-              <div key={g.id} className="flex items-center justify-between rounded-xl border border-border px-3 py-2 text-xs">
+              <div key={g.id} className={`flex flex-col justify-between gap-3 rounded-2xl glass p-4 text-xs ${g.id === gameId ? 'border-primary/50' : ''}`}>
                 <div>
-                  <div className="font-medium">{g.title || g.id}</div>
-                  <div className="text-text/60">{g.mode} · {new Date(g.createdAt).toLocaleString()}</div>
+                  <div className="font-serif text-lg text-white">{g.title || g.id}</div>
+                  <div className="mt-1 line-clamp-2 text-text/60">{g.prompt}</div>
+                  <div className="mt-2 font-mono text-[10px] text-muted">{g.mode} · {new Date(g.createdAt).toLocaleString()}</div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  {g.mode === 'side-scroller' && <Button onClick={async () => { await loadGame(g.id); setTab('galaxy'); }}>{uiLocale === 'zh' ? '进化 →' : 'Evolve →'}</Button>}
                   <Button variant="ghost" onClick={() => loadGame(g.id)}>{tc('open')}</Button>
                   <a className="text-text/70 underline" href={`/game/${g.id}`} target="_blank" rel="noreferrer">{t('tryPlay')}</a>
                   <Button variant="ghost" onClick={() => handleDeleteGame(g.id)}>{tc('delete')}</Button>
@@ -1070,6 +1108,7 @@ export default function Home() {
       </section>
 
     {gameId && mode === "side-scroller" && <ImprovementPanel key={gameId} gameId={gameId} locale={uiLocale} onApply={()=>loadGame(gameId)}/>}
+      </>}
     </main>
   );
 }

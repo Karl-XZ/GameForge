@@ -6,9 +6,9 @@ import { cookies, headers } from 'next/headers';
 import { defaultLocale, locales, type Locale } from '@/i18n/request';
 
 export const metadata: Metadata = {
-  title: 'GameForge',
+  title: 'GameForge · 游戏锻造与达尔文进化',
   description:
-    'One‑click generators for Text Adventure / TRPG and Side‑Scroller Action games, powered by Gemini.',
+    'Generate playable games from one sentence, then let them evolve: real AI playtests, blind reviews, a simulated player society and natural selection.',
 };
 
 /**
@@ -30,6 +30,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang={lang}>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+        <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Noto+Serif+SC:wght@400;600;700;900&display=swap" rel="stylesheet" />
+      </head>
       <body>{children}</body>
     </html>
   );

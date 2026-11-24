@@ -30,6 +30,7 @@ test('rollback restores absent fields and concurrent writes keep both edits',asy
 
 test('jobs validate budgets, deduplicate dispatch, stop and resume without replacing the active game',async()=>{
   const root=await fs.mkdtemp(path.join(os.tmpdir(),'gf-jobs-'));process.env.GAMEFORGE_DATA_DIR=root;process.env.GAMEFORGE_DISABLE_WORKER='1';
+  const hadKey=!!process.env.DEEPSEEK_API_KEY;if(!hadKey)process.env.DEEPSEEK_API_KEY='sk-test'; // createRun needs a configured worker model
   try{
     const game=await createGameRecord({mode:'side-scroller',prompt:'fixture',language:'en',textModel:'qwen/test',imageModel:'qwen/image'});
     await saveGameRecord(game.id,{gameHtml:'<html>original</html>',status:'ready'});const base=await snapshotGame(game.id);
@@ -42,7 +43,7 @@ test('jobs validate budgets, deduplicate dispatch, stop and resume without repla
     const file=path.join(runDir(game.id,run.id),'state.json');await fs.writeFile(file,JSON.stringify({...run,status:'stopped'}));
     await controlRun(game.id,run.id,'resume');assert.equal((await getRun(game.id,run.id)).status,'queued');
     assert.equal((await snapshotGame(game.id)).id,base.id);
-  }finally{await fs.rm(root,{recursive:true,force:true});delete process.env.GAMEFORGE_DATA_DIR;delete process.env.GAMEFORGE_DISABLE_WORKER;}
+  }finally{await fs.rm(root,{recursive:true,force:true});delete process.env.GAMEFORGE_DATA_DIR;delete process.env.GAMEFORGE_DISABLE_WORKER;if(!hadKey)delete process.env.DEEPSEEK_API_KEY;}
 });
 
 test('editing upstream designs invalidates downstream HTML and image reuse while retaining the old version',async()=>{

@@ -11,6 +11,24 @@
 
 ---
 
+## 🧬 Darwin Evolution · 达尔文进化
+
+**Forge a game from one sentence, then let it evolve.** Every offspring goes through GameForge's own *make → play → review* pipeline: a semantic mutation is built with exact edits, really played in an isolated sandbox by three AI player personas (newbie / speedrunner / explorer), compared with its parent in reversed blind A/B reviews, discussed by a simulated 40-persona player society, and selected by fitness and a MAP-Elites archive. A crashing original is repaired from the real runtime error before evolution starts.
+
+一句话锻造游戏，再让它自己进化：语义变异 → 隔离沙箱真实按键试玩 → 双顺序盲评 → 模拟玩家社会 → 自然选择。界面融合了「游戏达尔文引擎」的进化博物馆：**星系**族谱、**标本**卡、**标本柜**（MAP-Elites）、**观察台**（可以采访模拟玩家）和**方法**页。详见 [docs/DARWIN.md](docs/DARWIN.md)。
+
+<div align="center">
+  <img src="docs/images/darwin_galaxy.png" alt="Darwin galaxy" width="850"/>
+  <p><em>Galaxy: every star is a playable species; hover to trace its lineage back to generation 0.</em></p>
+  <img src="docs/images/darwin_specimen.png" alt="Specimen card" width="850"/>
+  <p><em>Specimen card: live sandboxed play, AI playtest video, fitness radar, gene barcode, blind-review reasons and player posts.</em></p>
+</div>
+
+- No Docker on your dev machine? `GAMEFORGE_RUNTIME=local` enables an explicit, clearly-labelled local Chromium sandbox (network allowlist, no credentials). Linux deployments keep the Docker runtime.
+- Real runs on 2026-11-24: 4 games, 34 species, 80 real playtests, 159 model calls. 2 of 4 generated originals crashed and were repaired; no offspring won both blind reviews (see the honest results table in [docs/DARWIN.md](docs/DARWIN.md)).
+
+---
+
 ## Overview
 
 **GameForge** is a full-stack generative AI game workshop built with **Next.js (App Router)**, **Gemini API**, **Phaser 3**, and **Sharp**. It closes the gap between creative ideation and functional gameplay by turning a natural-language concept into an immediately playable browser game within minutes.

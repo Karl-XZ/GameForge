@@ -75,7 +75,23 @@ class Budget:
 
 def clean_json(text):
     text = re.sub(r'^```(?:json)?\s*|\s*```$', '', text.strip())
-    return json.loads(text)
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        # Tolerate prose or a second object after the first complete JSON value.
+        start = text.find('{')
+        if start < 0:
+            raise
+        value, _ = json.JSONDecoder().raw_decode(text[start:])
+        return value
+
+
+def citation_path(citation):
+    """Return 'A/<path>' when a citation starts with a real-looking evidence path, else None."""
+    if not isinstance(citation, str):
+        return None
+    match = re.match(r'^([AB])/([-\w./]+?)(?=$|[\s,;:)，。：（])', citation.strip())
+    return match.group(1) + '/' + match.group(2) if match else None
 
 
 def apply_edits(html, edits):

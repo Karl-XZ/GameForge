@@ -13,6 +13,7 @@ export async function GET() {
     createdAt: g.createdAt,
     updatedAt: g.updatedAt,
     title: g.outline?.title ?? g.plan?.title ?? "",
+    prompt: g.prompt?.slice(0, 160) ?? "",
   }));
   return NextResponse.json({ ok: true, games: summary });
 }
