@@ -1,17 +1,17 @@
 'use client';
 import {useCallback, useEffect, useRef, useState} from 'react';
 
-/** Mineral pigments, legible on paper. */
+/** Pop inks. Every swatch is drawn with a jet keyline, so it reads on white panels and on the black stage alike. */
 export const GENE: Record<string, {zh: string; en: string; color: string; glyph: string}> = {
-  origin: {zh: '起源', en: 'Origin', color: '#1B1A17', glyph: '源'},
-  repair: {zh: '修复', en: 'Repair', color: '#6E685B', glyph: '修'},
-  mechanic: {zh: '机制', en: 'Mechanic', color: '#B8401F', glyph: '机'},
-  level: {zh: '关卡', en: 'Level', color: '#A86F1A', glyph: '关'},
-  pacing: {zh: '节奏', en: 'Pacing', color: '#7D8326', glyph: '律'},
-  feedback: {zh: '反馈', en: 'Feedback', color: '#2E6E5C', glyph: '感'},
-  difficulty: {zh: '难度', en: 'Difficulty', color: '#8E2C4E', glyph: '难'},
-  onboarding: {zh: '引导', en: 'Onboarding', color: '#2C4A7E', glyph: '引'},
-  visual: {zh: '视觉', en: 'Visual', color: '#6A4C93', glyph: '视'},
+  origin: {zh: '起源', en: 'Origin', color: '#FFFFFF', glyph: '0'},
+  repair: {zh: '修复', en: 'Repair', color: '#9A9AA2', glyph: '+'},
+  mechanic: {zh: '机制', en: 'Mechanic', color: '#FF2D55', glyph: 'M'},
+  level: {zh: '关卡', en: 'Level', color: '#FFB000', glyph: 'L'},
+  pacing: {zh: '节奏', en: 'Pacing', color: '#B4F000', glyph: 'P'},
+  feedback: {zh: '反馈', en: 'Feedback', color: '#00D9A0', glyph: 'F'},
+  difficulty: {zh: '难度', en: 'Difficulty', color: '#FF4FD8', glyph: 'D'},
+  onboarding: {zh: '引导', en: 'Onboarding', color: '#2E9BFF', glyph: 'G'},
+  visual: {zh: '视觉', en: 'Visual', color: '#9B6BFF', glyph: 'V'},
 };
 export const geneOf = (g?: string) => GENE[g || 'origin'] || GENE.mechanic;
 
@@ -74,3 +74,6 @@ export const PHASE: Record<string, [string, string]> = {
   build: ['精确编辑 · 制作', 'Building edits'], play: ['AI 玩家真实试玩', 'AI players playing'], review: ['A/B · B/A 盲评', 'Blind A/B review'],
   society: ['玩家社会推演', 'Player society'], select: ['自然选择', 'Natural selection'], done: ['进化完成', 'Evolution done'],
 };
+
+/** Gene swatch: a small keylined diamond. */
+export const SWATCH = 'inline-block h-[11px] w-[11px] shrink-0 rotate-45 border-2 border-jet';

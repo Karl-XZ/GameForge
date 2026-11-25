@@ -4,7 +4,7 @@ import * as React from "react";
 import { ImprovementPanel } from "@/components/ImprovementPanel";
 import { DarwinHub, type HubTab } from "@/components/darwin/DarwinHub";
 import { useLocale, useTranslations } from 'next-intl';
-import { Button, Label, Textarea, Tabs, Mark } from "@/components/ui";
+import { Button, Label, Textarea, Tabs, Mark, SectionTitle } from "@/components/ui";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import {
   GenerationProgress,
@@ -705,7 +705,7 @@ export default function Home() {
 
   const zhUI = uiLocale === 'zh';
   const L = (a: string, b: string) => (zhUI ? a : b);
-  const NAV = [["forge", "工坊", "Forge"], ["galaxy", "谱系", "Lineage"], ["specimen", "标本", "Specimen"], ["cabinet", "标本柜", "Cabinet"], ["observatory", "观察台", "Observatory"], ["method", "方法", "Method"]] as const;
+  const NAV = [["forge", "工坊", "Forge"], ["galaxy", "谱系", "Lineage"], ["specimen", "标本", "Specimen"], ["cabinet", "标本柜", "Cabinet"], ["observatory", "观察台", "Society"], ["method", "方法", "Method"]] as const;
   const PIPE = [
     [L('制作', 'Make'), L('从七类基因中选一个方向，只做少量精确编辑，并通过语法校验', 'One of seven genes, a few exact edits, a syntax check')],
     [L('试玩', 'Play'), L('萌新、速通、探索三种 AI 玩家在沙箱里真实按键', 'Newbie, speedrunner and explorer press real keys in a sandbox')],
@@ -714,27 +714,27 @@ export default function Home() {
     [L('选择', 'Select'), L('适应度 + 生态位档案；冠军必须赢下两次盲评', 'Fitness plus niche archive; a champion must win both reviews')],
   ];
   const stepHead = (n: number, title: string, actions?: React.ReactNode) => (
-    <div className="flex flex-wrap items-baseline justify-between gap-3">
-      <div className="flex items-baseline gap-4">
-        <span className="font-display text-[34px] leading-none text-ink3 num">{n}</span>
-        <h3 className="font-serif text-[17px] font-semibold">{title}</h3>
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex items-center gap-3">
+        <span className="flex h-10 w-12 -skew-x-[10deg] items-center justify-center bg-pop font-display text-[24px] text-snow shadow-hard-sm num">{n}</span>
+        <h3 className="heavy text-[18px]">{title}</h3>
       </div>
-      {actions ? <div className="flex gap-2">{actions}</div> : null}
+      {actions ? <div className="flex flex-wrap gap-3">{actions}</div> : null}
     </div>
   );
   const editRow = (value: string, set: (v: string) => void, onApply: () => void, busyKey: string, hint?: string) => (
-    <div className="ml-0 space-y-2 border-l-2 border-rule pl-4 md:ml-[44px]">
-      <div className="text-[12px] font-medium text-ink2">{t('incrementalEditLabel')}</div>
-      <div className="flex items-end gap-2">
+    <div className="space-y-2 border-l-[5px] border-jet bg-bone p-3 md:ml-[60px]">
+      <div className="eyebrow text-jet">{t('incrementalEditLabel')}</div>
+      <div className="flex items-end gap-3">
         <Textarea value={value} onChange={(e) => set(e.target.value)} rows={2} placeholder={t('incrementalEditPlaceholder')} />
-        <Button variant="ghost" onClick={onApply} disabled={chatBusy === busyKey || !gameId} className="shrink-0 py-2.5">
+        <Button variant="ghost" onClick={onApply} disabled={chatBusy === busyKey || !gameId} className="mb-1 shrink-0 py-2.5">
           {chatBusy === busyKey ? t('applying') : t('apply')}
         </Button>
       </div>
-      {hint ? <div className="text-[11px] text-ink3">{hint}</div> : null}
+      {hint ? <div className="text-[12px] text-ink3">{hint}</div> : null}
     </div>
   );
-  const codeArea = "field font-mono text-[12.5px] leading-[1.65] bg-paper/60";
+  const codeArea = "field font-mono text-[12.5px] leading-[1.65] bg-bone";
   const progressLabels = {
     processTitle: L('生成过程', 'Generation'),
     progress: L('进度', 'Progress'),
@@ -742,90 +742,105 @@ export default function Home() {
     logsTitle: L('实时日志', 'Live log'),
     waiting: t('generating'),
   };
+  const statTiles = stats?.ok ? [[stats.games, L('款游戏进入进化', 'games evolved')], [stats.species, L('个物种诞生', 'species born')], [stats.alive, L('个存活', 'alive')], [stats.calls, L('次模型调用', 'model calls')]] : [];
 
   return (
-    <div className="min-h-screen">
-      <header className="sticky top-0 z-40 border-b border-ink bg-paper">
-        <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-x-8 px-5 md:h-[60px] md:flex-nowrap md:px-10">
-          <button onClick={() => setTab("forge")} className="flex h-14 shrink-0 items-center gap-2.5 md:h-auto" aria-label="GameForge">
-            <Mark size={26} />
-            <span className="font-display text-[27px] leading-none tracking-[-0.01em]">GameForge</span>
-            <span className="hidden border-l border-rule pl-2.5 font-serif text-[13px] text-ink3 sm:inline">{L('达尔文进化', 'Darwin Evolution')}</span>
+    <div className="min-h-screen overflow-x-clip">
+      <header className="sticky top-0 z-40 border-b-[4px] border-jet bg-jet text-snow">
+        <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-x-6 px-5 md:h-[64px] md:flex-nowrap md:px-10">
+          <button onClick={() => setTab("forge")} className="group flex h-14 shrink-0 items-center gap-2.5 md:h-auto" aria-label="GameForge">
+            <span className="transition group-hover:-rotate-6"><Mark size={34} /></span>
+            <span className="slant font-display text-[28px] uppercase leading-none tracking-[0.01em]">Game<span className="text-pop">Forge</span></span>
+            <span className="tag tag-red ml-1 hidden sm:inline-flex"><span>{L('达尔文进化', 'Darwin')}</span></span>
           </button>
-          <nav className="order-3 -mx-5 -mb-px flex h-11 w-[calc(100%+2.5rem)] items-stretch overflow-x-auto border-t border-rule px-2 md:order-none md:mx-0 md:h-full md:w-auto md:border-0 md:px-0">
-            {NAV.map(([key, zh, en], i) => (
-              <button key={key} onClick={() => setTab(key as any)} className={`group relative flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3.5 text-[14px] transition ${tab === key ? 'text-ink' : 'text-ink3 hover:text-ink'}`}>
-                <span className="font-mono text-[10px] text-ink3/80 num">{String(i + 1).padStart(2, '0')}</span>
-                <span className={zhUI ? 'font-serif' : ''}>{zhUI ? zh : en}</span>
-                <span className={`absolute inset-x-3 bottom-0 h-[3px] transition ${tab === key ? 'bg-vermilion' : 'bg-transparent group-hover:bg-ink/15'}`} />
-              </button>
-            ))}
+          <nav className="order-3 -mx-5 flex h-12 w-[calc(100%+2.5rem)] items-center gap-1 overflow-x-auto border-t-2 border-snow/10 px-4 md:order-none md:mx-0 md:h-full md:w-auto md:border-0 md:px-2">
+            {NAV.map(([key, zh, en], i) => {
+              const on = tab === key;
+              return (
+                <button key={key} onClick={() => setTab(key as any)} aria-current={on ? 'page' : undefined} className={`group relative flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap px-3.5 transition ${on ? 'text-jet' : 'text-snow/75 hover:text-snow'}`}>
+                  <span className={`absolute inset-0 -skew-x-[14deg] transition-transform duration-200 ${on ? 'scale-x-100 bg-snow shadow-[4px_4px_0_#E8132E]' : 'origin-left scale-x-0 bg-pop group-hover:scale-x-100'}`} />
+                  <span className={`relative font-display text-[13px] num ${on ? 'text-pop' : 'text-snow/40 group-hover:text-snow'}`}>{String(i + 1).padStart(2, '0')}</span>
+                  <span className={`relative ${zhUI ? 'heavy text-[15px]' : 'font-cond text-[17px] font-extrabold uppercase italic tracking-[0.03em]'}`}>{zhUI ? zh : en}</span>
+                </button>
+              );
+            })}
           </nav>
           <div className="ml-auto flex shrink-0 items-center gap-5">
-            {stats?.ok && <div className="hidden font-mono text-[11px] text-ink3 num xl:block">
-              {stats.species} {L('物种', 'species')} · {stats.alive} {L('存活', 'alive')} · {stats.calls} {L('次调用', 'calls')}
+            {stats?.ok && <div className="hidden items-center gap-3 font-mono text-[11px] text-snow/60 num xl:flex">
+              <span><b className="text-snow">{stats.species}</b> {L('物种', 'species')}</span><span className="text-pop">/</span><span><b className="text-snow">{stats.alive}</b> {L('存活', 'alive')}</span><span className="text-pop">/</span><span><b className="text-snow">{stats.calls}</b> {L('调用', 'calls')}</span>
             </div>}
             <LanguageSelector />
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1440px] px-5 pb-20 md:px-10">
-      {tab !== "forge" && <DarwinHub gameId={gameId} games={games} onPickGame={async (id) => { await loadGame(id); }} locale={uiLocale} tab={tab as HubTab} setTab={setTab as any} onApplied={() => gameId && loadGame(gameId)} gameTitle={(parseJson<any>(planText)?.title) || prompt.slice(0, 40)} />}
+      <main className="mx-auto max-w-[1440px] px-5 pb-24 md:px-10">
+      {tab !== "forge" && <div className="fade-up"><DarwinHub gameId={gameId} games={games} onPickGame={async (id) => { await loadGame(id); }} locale={uiLocale} tab={tab as HubTab} setTab={setTab as any} onApplied={() => gameId && loadGame(gameId)} gameTitle={(parseJson<any>(planText)?.title) || prompt.slice(0, 40)} /></div>}
 
       {tab === "forge" && <>
-      <section className="grid gap-12 border-b border-rule pb-14 pt-14 lg:grid-cols-12 lg:pt-20">
+      <section className="grid items-start gap-12 pb-16 pt-12 lg:grid-cols-12 lg:pt-16">
         <div className="stagger lg:col-span-7">
-          <div className="eyebrow">{L('工坊 · 一句话到可玩游戏', 'The forge · one sentence to a playable game')}</div>
+          <div className="tag tag-white"><span>{L('工坊 · 一句话到可玩游戏', 'The forge · one sentence to a playable game')}</span></div>
           {zhUI
-            ? <h1 className="mt-6 font-serif text-[38px] font-bold leading-[1.12] tracking-[-0.01em] md:text-[72px]">一句话锻造游戏，<br />再让它<span className="relative whitespace-nowrap text-vermilion">自己进化<svg className="absolute -bottom-2 left-0 h-3 w-full" viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden><path d="M2 8 C 50 2, 120 12, 198 4" fill="none" stroke="#B8401F" strokeWidth="2.2" strokeLinecap="round" /></svg></span>。</h1>
-            : <h1 className="mt-6 font-display text-[46px] leading-[1.0] tracking-[-0.02em] md:text-[88px]">Forge a game from one sentence, then let it <em className="text-vermilion">evolve</em>.</h1>}
-          <p className="mt-8 max-w-[600px] text-[16px] leading-[1.9] text-ink2">{L('GameForge 把一句想法变成能离线运行的 HTML 游戏。达尔文进化把它当作第 0 代：每个后代都要被 AI 玩家真实试玩、被盲评、被模拟玩家社会讨论，只有拿出证据的后代才能继续繁衍。', 'GameForge turns an idea into an offline HTML game. Darwin Evolution treats it as generation 0: every offspring is really played by AI players, blindly reviewed and discussed by a simulated player society, and only offspring with evidence reproduce.')}</p>
-          <div className="mt-9 flex flex-wrap items-center gap-3">
-            <a href="#workbench" className="btn-ink px-5 py-3 text-[14px]">{L('开始锻造', 'Start forging')} <span aria-hidden>↓</span></a>
-            <button onClick={() => setTab('galaxy')} className="btn-line px-5 py-3 text-[14px]">{L('看进化谱系', 'See the lineage')} <span aria-hidden>→</span></button>
+            ? <h1 className="mt-7 text-[38px] leading-[1.12] sm:text-[52px] md:text-[84px]">
+                <span className="shout block -skew-x-[6deg]">一句话锻造游戏，</span>
+                <span className="mt-3 flex flex-wrap items-center gap-x-3 md:mt-4">
+                  <span className="shout -skew-x-[6deg]">再让它</span>
+                  <span className="ransom heavy -skew-x-[6deg]"><span>自</span><span>己</span><span>进</span><span>化</span></span>
+                </span>
+              </h1>
+            : <h1 className="mt-7 font-display text-[54px] uppercase leading-[0.95] md:text-[100px]">
+                <span className="block -skew-x-[6deg] text-snow [text-shadow:5px_5px_0_#0B0B0D]">Forge a game</span>
+                <span className="block -skew-x-[6deg] text-snow [text-shadow:5px_5px_0_#0B0B0D]">from one line.</span>
+                <span className="mt-3 inline-flex -skew-x-[6deg] items-center gap-3"><span className="text-snow [text-shadow:5px_5px_0_#0B0B0D]">Then let it</span><span className="ransom"><span>E</span><span>V</span><span>O</span><span>L</span><span>V</span><span>E</span></span></span>
+              </h1>}
+          <div className="bubble mt-10 max-w-[620px] border-[3px] border-jet bg-snow px-6 py-5 shadow-hard">
+            <p className="text-[16px] leading-[1.85] text-ink2">{L('GameForge 把一句想法变成能离线运行的 HTML 游戏。达尔文进化把它当作第 0 代：每个后代都要被 AI 玩家真实试玩、被盲评、被模拟玩家社会讨论，只有拿出证据的后代才能继续繁衍。', 'GameForge turns an idea into an offline HTML game. Darwin Evolution treats it as generation 0: every offspring is really played by AI players, blindly reviewed and discussed by a simulated player society, and only offspring with evidence reproduce.')}</p>
+          </div>
+          <div className="mt-12 flex flex-wrap items-center gap-5">
+            <a href="#workbench" className="btn-ink px-6 py-3.5 text-[18px]">{L('开始锻造', 'Start forging')} <span aria-hidden>↓</span></a>
+            <button onClick={() => setTab('galaxy')} className="btn-line px-6 py-3.5 text-[18px]">{L('看进化谱系', 'See the lineage')} <span aria-hidden>→</span></button>
           </div>
         </div>
-        <aside className="lg:col-span-5 lg:border-l lg:border-rule lg:pl-10">
-          <div className="flex items-baseline justify-between">
-            <div className="eyebrow">{L('图 1 · 一代是怎样产生的', 'Fig. 1 · how one generation is made')}</div>
-            <div className="font-mono text-[11px] text-ink3">≈ 6 {L('次调用 / 后代', 'calls / child')}</div>
+        <aside className="relative lg:col-span-5 lg:mt-6">
+          <div className="plate-dark halftone-white relative rotate-[-1.2deg] px-6 pb-6 pt-9">
+            <div className="tag tag-volt absolute -top-4 left-5 rotate-[-3deg] text-[14px]"><span>{L('一代是怎样产生的', 'How one generation is made')}</span></div>
+            <div className="absolute right-5 top-4 font-mono text-[11px] text-snow/50">≈ 6 {L('次调用 / 后代', 'calls / child')}</div>
+            <ol className="stagger mt-2">
+              {PIPE.map(([k, d], i) => (
+                <li key={k} className="group grid grid-cols-[56px_1fr] items-center gap-3 border-b-2 border-snow/10 py-3.5 last:border-0">
+                  <span className="outline-num font-display text-[44px] leading-none transition group-hover:text-pop group-hover:[-webkit-text-stroke:0]">{i + 1}</span>
+                  <span>
+                    <span className="heavy block text-[20px] leading-tight">{k}</span>
+                    <span className="mt-0.5 block text-[13px] leading-6 text-snow/65">{d}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+            <p className="mt-3 border-l-[4px] border-pop pl-3 text-[12px] leading-6 text-snow/60">{L('原版若在试玩中崩溃，真实报错会交给一次「修复突变」，修好的版本成为新的起点。', 'If the original crashes in play, the real error goes to a repair mutation and the fixed build becomes the new root.')}</p>
           </div>
-          <ol className="stagger mt-4 border-b border-ink">
-            {PIPE.map(([k, d], i) => (
-              <li key={k} className="grid grid-cols-[34px_72px_1fr] items-baseline gap-2 border-t border-ink/80 py-[15px] first:border-ink">
-                <span className="font-mono text-[11px] text-ink3 num">0{i + 1}</span>
-                <span className="font-serif text-[19px] font-semibold">{k}</span>
-                <span className="text-[13px] leading-6 text-ink2">{d}</span>
-              </li>
-            ))}
-          </ol>
-          <p className="mt-4 text-[12px] leading-6 text-ink3">{L('原版若在试玩中崩溃，真实报错会交给一次「修复突变」，修好的版本成为新的起点。', 'If the original crashes in play, the real error goes to a repair mutation and the fixed build becomes the new root.')}</p>
         </aside>
       </section>
 
-      {stats?.ok && <section className="grid grid-cols-2 border-b border-rule md:grid-cols-4">
-        {[[stats.games, L('款游戏进入进化', 'games evolved')], [stats.species, L('个物种诞生', 'species born')], [stats.alive, L('个存活', 'alive')], [stats.calls, L('次模型调用', 'model calls')]].map(([v, k], i) => (
-          <div key={i} className={`py-8 ${i % 2 ? 'pl-6 md:pl-8' : 'pr-6 md:pr-8'} ${i > 0 ? 'border-l border-rule md:pl-8' : ''} ${i === 2 ? 'max-md:border-l-0 max-md:pl-0' : ''}`}>
-            <div className="font-display text-[56px] leading-none num md:text-[64px]">{v}</div>
-            <div className="mt-2 text-[13px] text-ink3">{k}</div>
+      {statTiles.length > 0 && <section className="grid grid-cols-2 gap-5 pb-16 md:grid-cols-4 md:gap-6">
+        {statTiles.map(([v, k], i) => (
+          <div key={i} className={`-skew-x-[6deg] border-[3px] border-jet px-6 py-5 ${i % 2 ? 'bg-jet text-snow shadow-hard-white md:translate-y-4' : 'bg-snow shadow-hard'}`}>
+            <div className="skew-x-[6deg]">
+              <div className={`font-display text-[56px] leading-none num md:text-[72px] ${i % 2 ? 'text-snow' : 'text-pop'}`}>{v}</div>
+              <div className={`mt-2 heavy text-[14px] ${i % 2 ? 'text-snow/70' : 'text-ink2'}`}>{k}</div>
+            </div>
           </div>
         ))}
       </section>}
 
-      <section id="workbench" className="scroll-mt-20 pt-14">
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <div className="eyebrow">§ 1</div>
-            <h2 className="mt-2 font-serif text-[32px] font-semibold">{L('锻造台', 'Workbench')}</h2>
-          </div>
-          <p className="max-w-md text-[13px] leading-6 text-ink3">{L('一键生成会依次完成素材清单、素材和游戏代码；也可以在右侧逐步生成、手动修改。', 'One click runs the plan, assets and game code in order; or step through on the right and edit by hand.')}</p>
-        </div>
-        <div className="plate grid lg:grid-cols-[400px_minmax(0,1fr)]">
-          <div className="space-y-6 border-b border-rule p-6 md:p-7 lg:border-b-0 lg:border-r">
-            <div className="flex items-center justify-between">
-              <h3 className="font-serif text-[17px] font-semibold">{t('generateConsole')}</h3>
-              <span className="font-mono text-[10px] text-ink3">{gameId ? `No. ${gameId.slice(0, 8)}` : L('新游戏', 'NEW')}</span>
+      <section id="workbench" className="scroll-mt-24 pt-6">
+        <SectionTitle no="01" kicker={L('一键 / 逐步', 'One click / step by step')} title={L('锻造台', 'Workbench')}
+          aside={<p className="max-w-md bg-jet px-4 py-2.5 text-[13px] leading-6 text-snow/80">{L('一键生成会依次完成素材清单、素材和游戏代码；也可以在右侧逐步生成、手动修改。', 'One click runs the plan, assets and game code in order; or step through on the right and edit by hand.')}</p>} />
+        <div className="plate grid shadow-hard-lg lg:grid-cols-[410px_minmax(0,1fr)]">
+          <div className="space-y-6 border-b-[3px] border-jet bg-snow p-6 md:p-7 lg:border-b-0 lg:border-r-[3px]">
+            <div className="-mx-6 -mt-6 flex items-center justify-between bg-jet px-6 py-3 text-snow md:-mx-7 md:-mt-7 md:px-7">
+              <h3 className="heavy text-[17px]">{t('generateConsole')}</h3>
+              <span className="tag tag-red"><span>{gameId ? `#${gameId.slice(0, 8)}` : L('新游戏', 'NEW')}</span></span>
             </div>
             <Tabs
               value={mode}
@@ -837,7 +852,7 @@ export default function Home() {
             />
             <div className="grid gap-2">
               <Label>{t('ideaPrompt')}</Label>
-              <Textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={5} placeholder={t('promptPlaceholder')} className="font-serif text-[15px] leading-[1.8]" />
+              <Textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={5} placeholder={t('promptPlaceholder')} className="text-[15px] leading-[1.75]" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-2">
@@ -862,54 +877,54 @@ export default function Home() {
               </div>
             </div>
             {mode === 'side-scroller' && <div className="grid gap-2">
-              <Label>{L('视觉素材', 'Visual assets')}<span className="ml-1 font-normal text-ink3">{L('（影响耗时与费用）', '(affects time and cost)')}</span></Label>
+              <Label>{L('视觉素材', 'Visual assets')}<span className="ml-1 font-sans text-[12px] font-normal normal-case tracking-normal text-ink3">{L('（影响耗时与费用）', '(affects time and cost)')}</span></Label>
               <select aria-label={L('视觉素材', 'Visual assets')} className="field" value={assetMode} onChange={e => setAssetMode(e.target.value as any)}>
                 <option value="canvas">{L('原生绘制：优先验证玩法，无需生图', 'Canvas: test gameplay without image calls')}</option>
                 <option value="background">{L('生成一张背景，其余原生绘制', 'One generated background, Canvas characters')}</option>
                 <option value="full">{L('生成完整素材清单（耗时和费用较高）', 'Generate full asset list (higher time/cost)')}</option>
               </select>
             </div>}
-            {mode === 'side-scroller' && <label className="flex cursor-pointer items-start gap-3 border-y border-rule py-4">
+            {mode === 'side-scroller' && <label className={`flex cursor-pointer items-start gap-3 border-[2.5px] border-jet p-4 transition ${autoEvolve ? 'bg-volt' : 'bg-snow hover:bg-bone'}`}>
               <input type="checkbox" className="tick mt-0.5" checked={autoEvolve} onChange={e => setAutoEvolve(e.target.checked)} />
               <span>
-                <span className="block text-[14px] font-medium">{L('生成后立即开始达尔文进化', 'Start Darwin evolution right after')}</span>
-                <span className="mt-1 block text-[12px] leading-5 text-ink3">{L('3 代，每代 2 个后代；真实试玩、双盲评、玩家社会，约 44 次模型调用', '3 generations × 2 children; real playtests, blind reviews, player society; ~44 calls')}</span>
+                <span className="heavy block text-[15px]">{L('生成后立即开始达尔文进化', 'Start Darwin evolution right after')}</span>
+                <span className="mt-1 block text-[12px] leading-5 text-ink2">{L('3 代，每代 2 个后代；真实试玩、双盲评、玩家社会，约 44 次模型调用', '3 generations × 2 children; real playtests, blind reviews, player society; ~44 calls')}</span>
               </span>
             </label>}
-            <div className="flex gap-2">
-              <Button variant="accent" onClick={handleOneClick} disabled={streaming} className="flex-1 py-3.5 text-[15px]">
-                {streaming ? <><span className="breathe">●</span> {t('generating')}</> : <>{t('generateOneClick')} <span aria-hidden>→</span></>}
+            <div className="flex gap-3 pt-1">
+              <Button variant="accent" onClick={handleOneClick} disabled={streaming} className="flex-1 py-4 text-[20px]">
+                {streaming ? <><span className="breathe">■</span> {t('generating')}</> : <>{t('generateOneClick')} <span aria-hidden>→</span></>}
               </Button>
               {streaming ? <Button variant="ghost" onClick={() => abortRef.current?.abort()}>{tc('cancel')}</Button> : null}
             </div>
-            {error ? <div role="alert" className="border-l-2 border-vermilion bg-vermilion/5 px-3 py-2.5 text-[13px] leading-6 text-vermilion">{error}</div> : null}
-            <div className="flex items-baseline justify-between gap-3 text-[12px] text-ink3">
-              <span>{t('currentGameId')} <span className="font-mono text-ink2">{gameId ?? t('notGenerated')}</span></span>
+            {error ? <div role="alert" className="border-[2.5px] border-jet bg-volt px-3 py-2.5 text-[13px] font-semibold leading-6 text-jet">{error}</div> : null}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t-2 border-dashed border-jet/25 pt-4 text-[12px] text-ink3">
+              <span>{t('currentGameId')} <span className="font-mono text-jet">{gameId ?? t('notGenerated')}</span></span>
               {gameId ? <span className="flex shrink-0 gap-3">
-                <a className="link text-ink" href={`/game/${gameId}`} target="_blank" rel="noreferrer">{t('tryPlay')} ↗</a>
-                <button className="link text-ink" onClick={handleDownload}>{t('downloadZip')}</button>
+                <a className="link text-jet" href={`/game/${gameId}`} target="_blank" rel="noreferrer">{t('tryPlay')} ↗</a>
+                <button className="link text-jet" onClick={handleDownload}>{t('downloadZip')}</button>
               </span> : null}
             </div>
           </div>
 
-          <div className="min-w-0 p-6 md:p-7">
-            <div className="mb-6 flex items-center justify-between">
-              <h3 className="font-serif text-[17px] font-semibold">{t('stepByStep')}</h3>
-              <span className="font-mono text-[10px] text-ink3">{mode === 'side-scroller' ? L('横版动作', 'SIDE-SCROLLER') : L('文字冒险', 'TEXT ADVENTURE')}</span>
+          <div className="min-w-0 bg-snow p-6 md:p-7">
+            <div className="mb-7 flex items-center justify-between">
+              <h3 className="heavy slant text-[22px]">{t('stepByStep')}</h3>
+              <span className="tag"><span>{mode === 'side-scroller' ? L('横版动作', 'SIDE-SCROLLER') : L('文字冒险', 'TEXT ADVENTURE')}</span></span>
             </div>
             {streaming ? (
-              <div className="mb-8"><GenerationProgress percent={progress.percent} steps={progress.steps} logs={progress.logs} running={true} onCancel={() => abortRef.current?.abort()} labels={progressLabels} /></div>
+              <div className="mb-8 border-[2.5px] border-jet bg-bone p-4"><GenerationProgress percent={progress.percent} steps={progress.steps} logs={progress.logs} running={true} onCancel={() => abortRef.current?.abort()} labels={progressLabels} /></div>
             ) : progress.steps.length ? (
-              <details className="mb-8 border border-rule px-4 py-3">
-                <summary className="cursor-pointer select-none text-[13px] font-medium">{t('viewLogs')}</summary>
+              <details className="mb-8 border-[2.5px] border-jet px-4 py-3">
+                <summary className="cursor-pointer select-none font-cond text-[14px] font-extrabold uppercase italic">{t('viewLogs')}</summary>
                 <div className="mt-4"><GenerationProgress percent={progress.percent} steps={progress.steps} logs={progress.logs} running={false} labels={progressLabels} /></div>
               </details>
             ) : null}
 
-            <div className="divide-y divide-rule">
+            <div className="space-y-9">
             {mode === "text-adventure" ? (
               <>
-                <section className="space-y-4 pb-8">
+                <section className="space-y-4">
                   {stepHead(1, t('textAdventure.step1Title'), <>
                     <Button variant="ghost" onClick={handleOutlineGenerate} disabled={loadingStep === "outline"}>{loadingStep === "outline" ? t('generating') : t('textAdventure.generateOutline')}</Button>
                     <Button variant="ghost" onClick={handleOutlineSave} disabled={loadingStep === "outline-save"}>{t('textAdventure.saveChanges')}</Button>
@@ -917,25 +932,25 @@ export default function Home() {
                   <textarea className={codeArea} value={outlineText} onChange={(e) => setOutlineText(e.target.value)} rows={8} />
                   {editRow(step1Chat, setStep1Chat, applyStep1Chat, "step1")}
                 </section>
-                <section className="space-y-4 py-8">
+                <section className="space-y-4">
                   {stepHead(2, t('textAdventure.step2Title'), <>
                     <Button variant="ghost" onClick={handleScenesGenerate} disabled={loadingStep === "scenes"}>{loadingStep === "scenes" ? t('generating') : t('textAdventure.generateScenes')}</Button>
                     <Button variant="ghost" onClick={handleScenesSave} disabled={loadingStep === "scenes-save"}>{t('textAdventure.saveChanges')}</Button>
                   </>)}
                   <textarea className={codeArea} value={scenesText} onChange={(e) => setScenesText(e.target.value)} rows={10} />
                 </section>
-                <section className="space-y-4 pt-8">
+                <section className="space-y-4">
                   {stepHead(3, t('textAdventure.step3Title'), <Button variant="ghost" onClick={handleTextImagesGenerate} disabled={loadingStep === "text-images"}>{loadingStep === "text-images" ? t('generating') : t('textAdventure.generateAllImages')}</Button>)}
-                  <div className="grid gap-3 md:ml-[44px] md:grid-cols-2">
+                  <div className="grid gap-4 md:ml-[60px] md:grid-cols-2">
                     {sceneList.length === 0 ? <div className="text-[13px] text-ink3">{t('textAdventure.generateScenesFirst')}</div> : sceneList.map((scene: any) => {
                       const file = imageFiles[scene.id];
                       return (
-                        <figure key={scene.id} className="border border-rule bg-paper/50 p-3">
+                        <figure key={scene.id} className="border-[2.5px] border-jet bg-snow p-3 shadow-hard-sm">
                           {file ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img className="mb-3 w-full border border-rule" src={`/api/assets/${gameId}/${file}?v=${imageVersions[scene.id] ?? 0}`} alt={scene.title} />
-                          ) : <div className="hatch mb-3 aspect-video w-full border border-rule" />}
-                          <figcaption className="text-[13px] font-medium">{scene.title} <span className="font-mono text-[10px] text-ink3">{scene.id}</span></figcaption>
+                            <img className="mb-3 w-full border-2 border-jet" src={`/api/assets/${gameId}/${file}?v=${imageVersions[scene.id] ?? 0}`} alt={scene.title} />
+                          ) : <div className="hatch mb-3 aspect-video w-full border-2 border-jet" />}
+                          <figcaption className="heavy text-[14px]">{scene.title} <span className="font-mono text-[10px] font-normal text-ink3">{scene.id}</span></figcaption>
                           <div className="mt-1 line-clamp-3 text-[12px] leading-5 text-ink3">{scene.cgPrompt}</div>
                           <Button variant="ghost" className="mt-3" onClick={() => handleSceneImage(scene.id, scene.cgPrompt)} disabled={loadingStep === `scene-${scene.id}`}>{t('textAdventure.singleSceneRetry')}</Button>
                         </figure>
@@ -946,7 +961,7 @@ export default function Home() {
               </>
             ) : (
               <>
-                <section className="space-y-4 pb-8">
+                <section className="space-y-4">
                   {stepHead(1, t('sideScroller.step1Title'), <>
                     <Button variant="ghost" onClick={handlePlanGenerate} disabled={loadingStep === "plan"}>{loadingStep === "plan" ? t('generating') : t('sideScroller.generatePlan')}</Button>
                     <Button variant="ghost" onClick={handlePlanSave} disabled={loadingStep === "plan-save"}>{t('sideScroller.saveChanges')}</Button>
@@ -954,18 +969,18 @@ export default function Home() {
                   <textarea className={codeArea} value={planText} onChange={(e) => setPlanText(e.target.value)} rows={9} placeholder={L('素材清单（JSON）会显示在这里，可直接编辑。', 'The asset plan (JSON) appears here and can be edited.')} />
                   {editRow(step1Chat, setStep1Chat, applyStep1Chat, "step1", t('incrementalEditHint'))}
                 </section>
-                <section className="space-y-4 py-8">
+                <section className="space-y-4">
                   {stepHead(2, t('sideScroller.step2Title'), <Button variant="ghost" onClick={handleAssetImagesGenerate} disabled={loadingStep === "asset-images"}>{loadingStep === "asset-images" ? t('generating') : t('sideScroller.generateAllAssets')}</Button>)}
-                  <div className="grid gap-3 md:ml-[44px] md:grid-cols-2">
+                  <div className="grid gap-4 md:ml-[60px] md:grid-cols-2">
                     {assetList.length === 0 ? <div className="text-[13px] text-ink3">{t('sideScroller.generatePlanFirst')}</div> : assetList.map((asset: any) => {
                       const file = imageFiles[asset.id];
                       return (
-                        <figure key={asset.id} className="border border-rule bg-paper/50 p-3">
+                        <figure key={asset.id} className="border-[2.5px] border-jet bg-snow p-3 shadow-hard-sm">
                           {file ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img className="mb-3 max-h-48 w-full border border-rule object-contain" src={`/api/assets/${gameId}/${file}?v=${imageVersions[asset.id] ?? 0}`} alt={asset.id} />
+                            <img className="mb-3 max-h-48 w-full border-2 border-jet bg-bone object-contain" src={`/api/assets/${gameId}/${file}?v=${imageVersions[asset.id] ?? 0}`} alt={asset.id} />
                           ) : null}
-                          <figcaption className="text-[13px] font-medium">{asset.id} <span className="font-mono text-[10px] text-ink3">{asset.type}</span></figcaption>
+                          <figcaption className="heavy text-[14px]">{asset.id} <span className="font-mono text-[10px] font-normal text-ink3">{asset.type}</span></figcaption>
                           <div className="mt-1 line-clamp-3 text-[12px] leading-5 text-ink3">{asset.prompt}</div>
                           <div className="mt-1 text-[11px] text-ink3">{t('transparentRequired')}：{asset.needsCutout ? t('textAdventure.transparentRequired') : t('textAdventure.transparentNotRequired')}</div>
                           <Button variant="ghost" className="mt-3" onClick={() => handleAssetImage(asset.id, asset.prompt, asset.needsCutout)} disabled={loadingStep === `asset-${asset.id}`}>{t('sideScroller.singleAssetRetry')}</Button>
@@ -974,7 +989,7 @@ export default function Home() {
                     })}
                   </div>
                 </section>
-                <section className="space-y-4 pt-8">
+                <section className="space-y-4">
                   {stepHead(3, t('sideScroller.step3Title'), <>
                     <Button variant="ghost" onClick={handleSideGameGenerate} disabled={loadingStep === "side-game"}>{loadingStep === "side-game" ? t('generating') : t('sideScroller.generateGame')}</Button>
                     <Button variant="ghost" onClick={handleSideGameSave} disabled={loadingStep === "side-game-save"}>{t('sideScroller.saveChanges')}</Button>
@@ -989,51 +1004,48 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="pt-16">
-        <div className="mb-5 flex items-end justify-between gap-4">
-          <div>
-            <div className="eyebrow">§ 2</div>
-            <h2 className="mt-2 font-serif text-[32px] font-semibold">{L('馆藏', 'Collection')}</h2>
-          </div>
-          <div className="font-mono text-[11px] text-ink3 num">{games.length} {L('件', 'items')}</div>
-        </div>
+      <section className="pt-20">
+        <SectionTitle no="02" kicker={`${games.length} ${L('款', 'games')}`} title={L('作品库', 'Library')} />
         {games.length === 0 ? (
-          <div className="border-y border-rule py-10 text-center text-[13px] text-ink3">{t('history.noRecords')}</div>
+          <div className="plate py-12 text-center text-[14px] text-ink3">{t('history.noRecords')}</div>
         ) : (
-          <div className="border-t border-ink">
-            <div className="hidden grid-cols-[64px_minmax(0,1fr)_120px_150px_auto] gap-6 border-b border-rule py-2 font-mono text-[10px] uppercase tracking-wider text-ink3 md:grid">
-              <span>No.</span><span>{L('作品', 'Title')}</span><span>{L('类型', 'Mode')}</span><span>{L('入藏时间', 'Created')}</span><span className="text-right">{L('操作', 'Actions')}</span>
+          <div className="plate overflow-hidden">
+            <div className="hidden grid-cols-[72px_minmax(0,1fr)_130px_150px_auto] gap-6 bg-jet px-5 py-2.5 font-cond text-[13px] font-extrabold uppercase italic tracking-[0.08em] text-snow md:grid">
+              <span>No.</span><span>{L('作品', 'Title')}</span><span>{L('类型', 'Mode')}</span><span>{L('创建时间', 'Created')}</span><span className="text-right">{L('操作', 'Actions')}</span>
             </div>
-            {games.map((g, i) => (
-              <div key={g.id} className={`group relative grid items-center gap-x-6 gap-y-3 border-b border-rule py-5 transition hover:bg-card/70 md:grid-cols-[64px_minmax(0,1fr)_120px_150px_auto] ${g.id === gameId ? 'bg-card' : ''}`}>
-                {g.id === gameId && <span className="absolute -left-px bottom-0 top-0 w-[3px] bg-vermilion" />}
-                <span className="pl-3 font-mono text-[12px] text-ink3 num">{String(games.length - i).padStart(3, '0')}</span>
-                <div className="min-w-0">
-                  <div className="truncate font-serif text-[19px] font-semibold">{g.title || g.id}</div>
-                  <div className="mt-1 line-clamp-1 text-[13px] text-ink3">{g.prompt}</div>
+            {games.map((g, i) => {
+              const on = g.id === gameId;
+              return (
+                <div key={g.id} className={`group relative grid items-center gap-x-6 gap-y-3 border-b-2 border-jet/10 px-5 py-5 transition last:border-0 md:grid-cols-[72px_minmax(0,1fr)_130px_150px_auto] ${on ? 'bg-volt/60' : 'hover:bg-bone'}`}>
+                  <span className={`absolute bottom-0 left-0 top-0 w-[7px] origin-left transition-transform ${on ? 'scale-x-100 bg-pop' : 'scale-x-0 bg-jet group-hover:scale-x-100'}`} />
+                  <span className={`font-display text-[30px] leading-none num ${on ? 'text-pop' : 'text-jet/25 group-hover:text-jet'}`}>{String(games.length - i).padStart(2, '0')}</span>
+                  <div className="min-w-0">
+                    <div className="heavy truncate text-[20px]">{g.title || g.id}</div>
+                    <div className="mt-1 line-clamp-1 text-[13px] text-ink3">{g.prompt}</div>
+                  </div>
+                  <span><span className={`tag ${g.mode === 'side-scroller' ? 'tag-red' : ''}`}><span>{g.mode === 'side-scroller' ? t('sideScrollerLabel') : t('textAdventureLabel')}</span></span></span>
+                  <span className="font-mono text-[11px] text-ink3 num">{new Date(g.createdAt).toLocaleString(zhUI ? 'zh-CN' : 'en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+                  <div className="flex flex-wrap items-center justify-end gap-3">
+                    {g.mode === 'side-scroller' && <Button variant="accent" className="py-1.5" onClick={async () => { await loadGame(g.id); setTab('galaxy'); }}>{L('进化', 'Evolve')} →</Button>}
+                    <Button variant="ghost" className="py-1.5" onClick={() => loadGame(g.id)}>{tc('open')}</Button>
+                    <a className="btn-quiet py-1.5" href={`/game/${g.id}`} target="_blank" rel="noreferrer">{t('tryPlay')} ↗</a>
+                    <button className="px-2 py-1.5 font-cond text-[13px] font-bold uppercase text-ink3 transition hover:text-pop" onClick={() => handleDeleteGame(g.id)}>{tc('delete')}</button>
+                  </div>
                 </div>
-                <span className="text-[12px] text-ink2">{g.mode === 'side-scroller' ? t('sideScrollerLabel') : t('textAdventureLabel')}</span>
-                <span className="font-mono text-[11px] text-ink3 num">{new Date(g.createdAt).toLocaleString(zhUI ? 'zh-CN' : 'en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
-                <div className="flex flex-wrap items-center justify-end gap-2">
-                  {g.mode === 'side-scroller' && <Button className="py-1.5" onClick={async () => { await loadGame(g.id); setTab('galaxy'); }}>{L('进化', 'Evolve')} →</Button>}
-                  <Button variant="ghost" className="py-1.5" onClick={() => loadGame(g.id)}>{tc('open')}</Button>
-                  <a className="btn-quiet py-1.5" href={`/game/${g.id}`} target="_blank" rel="noreferrer">{t('tryPlay')} ↗</a>
-                  <button className="px-2 py-1.5 text-[12px] text-ink3 transition hover:text-vermilion" onClick={() => handleDeleteGame(g.id)}>{tc('delete')}</button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
 
-      {gameId && mode === "side-scroller" && <ImprovementPanel key={gameId} gameId={gameId} locale={uiLocale} onApply={() => loadGame(gameId)} />}
+      {gameId && mode === "side-scroller" && <div className="pt-20"><ImprovementPanel key={gameId} gameId={gameId} locale={uiLocale} onApply={() => loadGame(gameId)} /></div>}
       </>}
       </main>
 
-      <footer className="border-t border-ink">
-        <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4 px-5 py-6 text-[12px] text-ink3 md:px-10">
-          <div className="flex items-center gap-2"><Mark size={18} /><span className="font-display text-[17px] text-ink">GameForge</span><span>· {L('游戏锻造与达尔文进化', 'forge & Darwin evolution')}</span></div>
-          <div>{L('模型评审与模拟玩家社会都是代理信号，不等于真人觉得好玩。', 'Model reviews and the simulated society are proxies, not human enjoyment.')}</div>
+      <footer className="relative border-t-[4px] border-jet bg-jet text-snow">
+        <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4 px-5 py-6 text-[12px] text-snow/60 md:px-10">
+          <div className="flex items-center gap-2.5"><Mark size={22} /><span className="slant font-display text-[18px] uppercase text-snow">Game<span className="text-pop">Forge</span></span><span>· {L('游戏锻造与达尔文进化', 'forge & Darwin evolution')}</span></div>
+          <div className="border-l-[4px] border-pop pl-3">{L('模型评审与模拟玩家社会都是代理信号，不等于真人觉得好玩。', 'Model reviews and the simulated society are proxies, not human enjoyment.')}</div>
         </div>
       </footer>
     </div>

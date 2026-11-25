@@ -162,6 +162,14 @@ class Evolution(Run):
     def lang(self):
         return 'Simplified Chinese' if self.language == 'zh' else 'English'
 
+    def naming(self):
+        # The name must come from the game's own world. An unqualified "poetic" request made every species read as
+        # classical Chinese verse regardless of genre, so the style is pinned to the game and the cliche is ruled out.
+        return ('"name":"short variant name (<=12 chars) in the voice of THIS game: its own setting, genre, tone and vocabulary, hinting at what '
+                'this mutation changes, the way a patch codename, edition title or creature from its world would sound. Do not default to '
+                'classical, poetic, wuxia or ink-wash wording unless the game itself is set that way. Write it in ' + self.lang() +
+                ', or in English if that fits the game better",' '"latin":"pseudo-Latin binomial"')
+
     def trajectories(self, name, limit=9000):
         folder = self.root / 'evidence' / name
         out = []
@@ -219,7 +227,7 @@ class Evolution(Run):
             'Write what each persona would post after trying it, grounded ONLY in this evidence: crashes, unclear goals, unfair hits, '
             'slow starts, satisfying jumps, visible feedback. Ratings must differ by persona taste and must not be inflated; '
             'quit_reason is required when stay=false. Never claim this is real human data. '
-            'Return JSON {' + ('"name":"poetic species name, 2-6 chars","latin":"pseudo-Latin binomial",' if need_name else '') +
+            'Return JSON {' + (self.naming() + ',' if need_name else '') +
             '"summary":"one-sentence community verdict","posts":[{"persona":"p..","tried":true,"rating":1,"stay":true,"quit_reason":null,'
             '"text":"<=60 chars in persona voice","day":1}]}. Exactly one post per persona (use the persona id such as "p3"), day 1-7. Language: ' + self.lang() + '.\n'
             'Species: ' + json.dumps({k: species.get(k) for k in ('name', 'gene', 'hypothesis', 'changes')}, ensure_ascii=False) +
@@ -242,7 +250,7 @@ class Evolution(Run):
         if len(posts) < 5:
             raise ValueError('Society simulation returned too few valid persona posts')
         if need_name:
-            species['name'] = str(answer.get('name') or '无名之种')[:16]
+            species['name'] = str(answer.get('name') or ('未命名变种' if self.language == 'zh' else 'Unnamed variant'))[:16]
             species['latin'] = str(answer.get('latin') or 'Ludus ignotus')[:40]
         social = self.diffuse(sid, posts)
         social['summary'] = str(answer.get('summary', ''))[:200]
@@ -478,8 +486,8 @@ class Evolution(Run):
             'its offspring is more fun, clearer and more distinctive. Choose exactly ONE gene from ' + json.dumps(GENES) + '. '
             'Novelty pressure: prefer genes that are rare in the archive unless real play shows a critical problem. Keep genre, core loop, controls '
             'and all assets; do not add assets; no cheats, fake bridge state, removed challenge or inflated metrics. Small and buildable with <=12 exact edits. '
-            'Return JSON {"gene":"one of the genes","name":"poetic new species name, 2-6 chars","latin":"pseudo-Latin binomial","hypothesis":"...",'
-            '"changes":["..."],"acceptance":["..."]}. Keep these JSON keys in English; values for name/hypothesis/changes in ' + self.lang() + '.\n'
+            'Return JSON {"gene":"one of the genes",' + self.naming() + ',"hypothesis":"...",'
+            '"changes":["..."],"acceptance":["..."]}. Keep these JSON keys in English; values for hypothesis/changes in ' + self.lang() + '.\n'
             'Archive gene counts: ' + json.dumps(genes) + '\nExisting species names (the new name must be different): ' +
             json.dumps(sorted({x.get('name') for x in self.species if x.get('name')}), ensure_ascii=False) + '\nLineage (child to root): ' + json.dumps(lineage, ensure_ascii=False) +
             '\nCommunity complaints: ' + json.dumps(complaints, ensure_ascii=False) +

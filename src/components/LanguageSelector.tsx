@@ -20,16 +20,16 @@ export function LanguageSelector() {
   };
 
   return (
-    <div className={`flex items-center border border-ink/70 font-mono text-[11px] ${isPending ? 'opacity-60' : ''}`} role="group" aria-label="Language">
-      {([['zh', '中'], ['en', 'EN']] as const).map(([code, label], i) => (
+    <div className={`flex items-center gap-1 font-cond text-[13px] font-extrabold italic ${isPending ? 'opacity-60' : ''}`} role="group" aria-label="Language">
+      {([['zh', '中'], ['en', 'EN']] as const).map(([code, label]) => (
         <button
           key={code}
           type="button"
           onClick={() => code !== currentLocale && handleChange(code)}
           aria-pressed={code === currentLocale}
-          className={`px-2 py-1 transition ${i ? 'border-l border-ink/70' : ''} ${code === currentLocale ? 'bg-ink text-paper' : 'text-ink2 hover:bg-ink/5'}`}
+          className={`-skew-x-[10deg] border-2 px-2.5 py-1 transition ${code === currentLocale ? 'border-snow bg-snow text-jet' : 'border-snow/40 text-snow/70 hover:border-snow hover:text-snow'}`}
         >
-          {label}
+          <span className="inline-block skew-x-[10deg]">{label}</span>
         </button>
       ))}
     </div>

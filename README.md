@@ -15,7 +15,7 @@
 
 **Forge a game from one sentence, then let it evolve.** Every offspring goes through GameForge's own *make → play → review* pipeline: a semantic mutation is built with exact edits, really played in an isolated sandbox by three AI player personas (newbie / speedrunner / explorer), compared with its parent in reversed blind A/B reviews, discussed by a simulated 40-persona player society, and selected by fitness and a MAP-Elites archive. A crashing original is repaired from the real runtime error before evolution starts.
 
-一句话锻造游戏，再让它自己进化：语义变异 → 隔离沙箱真实按键试玩 → 双顺序盲评 → 模拟玩家社会 → 自然选择。界面是一套纸本自然史图录风格的进化博物馆：**谱系**图、**标本**卡、**标本柜**（MAP-Elites）、**观察台**（可以采访模拟玩家）和**方法**页。详见 [docs/DARWIN.md](docs/DARWIN.md)。
+一句话锻造游戏，再让它自己进化：语义变异 → 隔离沙箱真实按键试玩 → 双顺序盲评 → 模拟玩家社会 → 自然选择。界面是游戏菜单式的波普风格（红 / 黑 / 白、斜切色块、硬投影、网点）：**谱系**图、**标本**卡、**标本柜**（MAP-Elites）、**观察台**（可以采访模拟玩家）和**方法**页。详见 [docs/DARWIN.md](docs/DARWIN.md)。
 
 <div align="center">
   <img src="docs/images/darwin_galaxy.png" alt="Darwin galaxy" width="850"/>

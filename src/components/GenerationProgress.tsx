@@ -18,11 +18,11 @@ export type LogEntry = {
 };
 
 function StatusDot({ status }: { status: StepStatus }) {
-  if (status === "done") return <span className="font-mono text-[12px] text-verdigris">✓</span>;
-  if (status === "running") return <span className="breathe inline-block h-2 w-2 rounded-full bg-vermilion" />;
-  if (status === "skipped") return <span className="font-mono text-[12px] text-ink3">–</span>;
-  if (status === "error") return <span className="font-mono text-[12px] text-vermilion">✕</span>;
-  return <span className="inline-block h-2 w-2 rounded-full border border-ink3/60" />;
+  if (status === "done") return <span className="flex h-5 w-5 -skew-x-[8deg] items-center justify-center bg-jet font-mono text-[11px] font-semibold text-snow">✓</span>;
+  if (status === "running") return <span className="breathe flex h-5 w-5 -skew-x-[8deg] items-center justify-center bg-pop font-mono text-[11px] text-snow">▶</span>;
+  if (status === "skipped") return <span className="flex h-5 w-5 items-center justify-center font-mono text-[12px] text-ink3">–</span>;
+  if (status === "error") return <span className="flex h-5 w-5 -skew-x-[8deg] items-center justify-center bg-volt font-mono text-[11px] font-semibold text-jet">✕</span>;
+  return <span className="h-5 w-5 -skew-x-[8deg] border-2 border-jet/30" />;
 }
 
 export function GenerationProgress(props: {
@@ -59,23 +59,23 @@ export function GenerationProgress(props: {
   return (
     <div className="space-y-5">
       <div>
-        <div className="flex items-baseline justify-between gap-3">
-          <div className="text-[13px] font-medium">{processTitle}</div>
-          <div className="flex items-baseline gap-3">
-            <span className="font-display text-[28px] leading-none num">{pct}<span className="text-[16px] text-ink3">%</span></span>
-            {props.running && props.onCancel ? <button onClick={props.onCancel} className="btn-quiet py-1 text-[12px]" type="button">{cancel}</button> : null}
+        <div className="flex items-end justify-between gap-3">
+          <div className="tag">{processTitle}</div>
+          <div className="flex items-end gap-3">
+            <span className="font-display text-[44px] leading-[0.85] num">{pct}<span className="text-[22px] text-pop">%</span></span>
+            {props.running && props.onCancel ? <button onClick={props.onCancel} className="btn-quiet py-1.5 text-[13px]" type="button">{cancel}</button> : null}
           </div>
         </div>
-        <div className="mt-3 h-[3px] w-full bg-rule" aria-label={progress} role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
-          <div className="h-full bg-ink transition-[width] duration-500" style={{ width: `${pct}%` }} />
+        <div className="mt-3 h-4 w-full -skew-x-[12deg] border-[2.5px] border-jet bg-snow" aria-label={progress} role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+          <div className={`h-full transition-[width] duration-500 ${props.running ? "marching" : "bg-pop"}`} style={{ width: `${pct}%` }} />
         </div>
-        <ol className="mt-4 divide-y divide-rule border-y border-rule">
+        <ol className="mt-4 space-y-1.5">
           {props.steps.map((s, i) => (
-            <li key={s.id} className="grid grid-cols-[28px_18px_1fr] items-baseline gap-2 py-2.5">
-              <span className="font-mono text-[10px] text-ink3 num">{String(i + 1).padStart(2, "0")}</span>
+            <li key={s.id} className={`grid grid-cols-[30px_22px_1fr] items-center gap-2 border-l-[5px] py-1.5 pl-2 ${s.status === "running" ? "border-pop bg-pop/[0.06]" : s.status === "done" ? "border-jet" : "border-fog"}`}>
+              <span className="font-display text-[15px] text-ink3 num">{String(i + 1).padStart(2, "0")}</span>
               <span className="flex justify-center"><StatusDot status={s.status} /></span>
               <div className="min-w-0">
-                <div className={`text-[13px] ${s.status === "running" ? "font-medium text-ink" : s.status === "pending" ? "text-ink3" : "text-ink2"}`}>{s.title}</div>
+                <div className={`text-[14px] ${s.status === "running" ? "font-bold text-jet" : s.status === "pending" ? "text-ink3" : "font-medium text-ink2"}`}>{s.title}</div>
                 {s.message ? <div className="mt-0.5 break-words text-[12px] text-ink3">{s.message}</div> : null}
               </div>
             </li>
@@ -84,16 +84,16 @@ export function GenerationProgress(props: {
       </div>
       <div>
         <div className="eyebrow mb-2">{logsTitle}</div>
-        <div ref={logRef} className="max-h-60 overflow-auto bg-ink px-4 py-3 font-mono text-[11.5px] leading-[1.7] text-paper/85">
+        <div ref={logRef} className="halftone-white max-h-60 overflow-auto border-[3px] border-jet bg-jet px-4 py-3 font-mono text-[11.5px] leading-[1.7] text-snow/85">
           {props.logs.length ? (
             props.logs.map((l, idx) => (
               <div key={idx} className="whitespace-pre-wrap break-words">
-                <span className="text-paper/40">{new Date(l.ts).toLocaleTimeString()}</span>{" "}
-                <span className={l.level === "error" ? "text-[#F2A38C]" : l.level === "warn" ? "text-[#E9C77B]" : ""}>{l.message}</span>
+                <span className="text-snow/40">{new Date(l.ts).toLocaleTimeString()}</span>{" "}
+                <span className={l.level === "error" ? "text-[#FF6B7D]" : l.level === "warn" ? "text-volt" : ""}>{l.message}</span>
               </div>
             ))
           ) : (
-            <div className="text-paper/50">{waiting}</div>
+            <div className="text-snow/50">{waiting}</div>
           )}
         </div>
       </div>
