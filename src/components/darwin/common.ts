@@ -1,16 +1,17 @@
 'use client';
 import {useCallback, useEffect, useRef, useState} from 'react';
 
+/** Mineral pigments, legible on paper. */
 export const GENE: Record<string, {zh: string; en: string; color: string; glyph: string}> = {
-  origin: {zh: '起源', en: 'Origin', color: '#e8edf3', glyph: '源'},
-  repair: {zh: '修复', en: 'Repair', color: '#9fb3c8', glyph: '修'},
-  mechanic: {zh: '机制', en: 'Mechanic', color: '#ff6b9a', glyph: '机'},
-  level: {zh: '关卡', en: 'Level', color: '#f2b66d', glyph: '关'},
-  pacing: {zh: '节奏', en: 'Pacing', color: '#c6f26d', glyph: '律'},
-  feedback: {zh: '反馈', en: 'Feedback', color: '#5eead4', glyph: '感'},
-  difficulty: {zh: '难度', en: 'Difficulty', color: '#ff8a4c', glyph: '难'},
-  onboarding: {zh: '引导', en: 'Onboarding', color: '#7aa2ff', glyph: '引'},
-  visual: {zh: '视觉', en: 'Visual', color: '#b28cff', glyph: '视'},
+  origin: {zh: '起源', en: 'Origin', color: '#1B1A17', glyph: '源'},
+  repair: {zh: '修复', en: 'Repair', color: '#6E685B', glyph: '修'},
+  mechanic: {zh: '机制', en: 'Mechanic', color: '#B8401F', glyph: '机'},
+  level: {zh: '关卡', en: 'Level', color: '#A86F1A', glyph: '关'},
+  pacing: {zh: '节奏', en: 'Pacing', color: '#7D8326', glyph: '律'},
+  feedback: {zh: '反馈', en: 'Feedback', color: '#2E6E5C', glyph: '感'},
+  difficulty: {zh: '难度', en: 'Difficulty', color: '#8E2C4E', glyph: '难'},
+  onboarding: {zh: '引导', en: 'Onboarding', color: '#2C4A7E', glyph: '引'},
+  visual: {zh: '视觉', en: 'Visual', color: '#6A4C93', glyph: '视'},
 };
 export const geneOf = (g?: string) => GENE[g || 'origin'] || GENE.mechanic;
 

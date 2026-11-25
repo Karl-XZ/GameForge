@@ -1,8 +1,9 @@
 'use client';
 import {useEffect, useMemo, useRef, useState} from 'react';
 import {api, fmt, geneOf, pct, type Persona, type Run, type Species} from './common';
+import {Stars} from './Specimen';
 
-const STATE_COLOR = ['rgba(148,163,184,0.28)', '#e8edf3', '#5eead4', '#ff6b9a'];
+const STATE_COLOR = ['#CBC2AE', '#1B1A17', '#2E6E5C', '#B8401F'];
 
 function Network({people, timeline, day, posted, onPick, archetypes}: {people: Persona[]; timeline: number[][]; day: number; posted: Set<string>; onPick: (id: string) => void; archetypes: Record<string, string>}) {
   const ref = useRef<HTMLCanvasElement>(null); const [hover, setHover] = useState<string | null>(null);
@@ -29,23 +30,23 @@ function Network({people, timeline, day, posted, onPick, archetypes}: {people: P
         for (const f of p.follows) {
           if (!pos[f]) continue; const a = P(f), b = P(p.id); const j = people.findIndex(q => q.id === f);
           const active = (states[j] ?? 0) >= 2 && (states[i] ?? 0) >= 1;
-          ctx.strokeStyle = active ? 'rgba(94,234,212,0.2)' : 'rgba(148,163,184,0.05)'; ctx.lineWidth = active ? 1 : 0.7;
+          ctx.strokeStyle = active ? 'rgba(46,110,92,0.16)' : 'rgba(27,26,23,0.05)'; ctx.lineWidth = active ? 0.9 : 0.6;
           const mx = (a.x + b.x) / 2 + (w / 2 - (a.x + b.x) / 2) * 0.35, my = (a.y + b.y) / 2 + (h / 2 - (a.y + b.y) / 2) * 0.35;
           ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.quadraticCurveTo(mx, my, b.x, b.y); ctx.stroke();
-          if (active) { const k = (t * 0.6 + i * 0.13) % 1; const x = (1 - k) * (1 - k) * a.x + 2 * (1 - k) * k * mx + k * k * b.x, y = (1 - k) * (1 - k) * a.y + 2 * (1 - k) * k * my + k * k * b.y; ctx.fillStyle = 'rgba(94,234,212,0.9)'; ctx.fillRect(x - 1, y - 1, 2, 2); }
+          if (active && (i + j) % 3 === 0) { const k = (t * 0.6 + i * 0.13) % 1; const x = (1 - k) * (1 - k) * a.x + 2 * (1 - k) * k * mx + k * k * b.x, y = (1 - k) * (1 - k) * a.y + 2 * (1 - k) * k * my + k * k * b.y; ctx.fillStyle = '#2E6E5C'; ctx.beginPath(); ctx.arc(x, y, 1.6, 0, 7); ctx.fill(); }
         }
       });
       people.forEach((p, i) => {
         const {x, y} = P(p.id); const s = states[i] ?? 0; const big = p.arch === 'kol' || posted.has(p.id);
         const r = big ? 7 : 5; const col = STATE_COLOR[s];
-        if (s >= 2) { const g = ctx.createRadialGradient(x, y, 0, x, y, r * 3.5); g.addColorStop(0, col + '88'); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r * 3.5, 0, 7); ctx.fill(); }
+        ctx.fillStyle = '#F2EEE4'; ctx.beginPath(); ctx.arc(x, y, r + 2, 0, 7); ctx.fill();
         if (s === 1) { ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.stroke(); }
         else { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); }
-        if (posted.has(p.id)) { ctx.strokeStyle = 'rgba(242,182,109,0.9)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, r + 4 + Math.sin(t * 3 + i) * 1.2, 0, 7); ctx.stroke(); }
-        if (st.current.hover === p.id || big) { ctx.fillStyle = st.current.hover === p.id ? '#fff' : 'rgba(232,237,243,0.6)'; ctx.font = '12px "Noto Serif SC", serif'; ctx.textAlign = 'center'; ctx.fillText(p.name, x, y - r - 7); }
+        if (posted.has(p.id)) { ctx.strokeStyle = '#A86F1A'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(x, y, r + 4, 0, 7); ctx.stroke(); }
+        if (st.current.hover === p.id || big) { ctx.fillStyle = st.current.hover === p.id ? '#1B1A17' : '#45423B'; ctx.font = (st.current.hover === p.id ? '600 ' : '') + '12px "Noto Serif SC", serif'; ctx.textAlign = 'center'; ctx.fillText(p.name, x, y - r - 7); }
       });
       const archs = Object.keys(archetypes);
-      archs.forEach((a, k) => { const ang = (k / archs.length) * Math.PI * 2 - Math.PI / 2; ctx.fillStyle = 'rgba(133,147,166,0.75)'; ctx.font = '10px "JetBrains Mono", monospace'; ctx.textAlign = 'center'; ctx.fillText(archetypes[a], w / 2 + Math.cos(ang) * w * 0.47, h / 2 + Math.sin(ang) * h * 0.46); });
+      archs.forEach((a, k) => { const ang = (k / archs.length) * Math.PI * 2 - Math.PI / 2; ctx.fillStyle = '#7A7466'; ctx.font = '11px "Noto Serif SC", serif'; ctx.textAlign = 'center'; ctx.fillText(archetypes[a], w / 2 + Math.cos(ang) * w * 0.47, h / 2 + Math.sin(ang) * h * 0.46); });
       raf = requestAnimationFrame(draw);
     };
     raf = requestAnimationFrame(draw); return () => cancelAnimationFrame(raf);
@@ -65,7 +66,7 @@ export function Observatory({run, gameId, locale, people, archetypes, sid, onSel
   const [chat, setChat] = useState<{q: string; a: string}[]>([]); const [q, setQ] = useState(''); const [asking, setAsking] = useState(false); const [err, setErr] = useState('');
   useEffect(() => { setChat([]); setErr(''); }, [persona, s?.id]);
   useEffect(() => { if (!playing) return; setDay(1); let d = 1; const t = setInterval(() => { d++; if (d > 7) { clearInterval(t); setPlaying(false); } else setDay(d); }, 900); return () => clearInterval(t); }, [playing]);
-  if (!s?.society) return <div className="p-10 text-center text-muted">{L('还没有完成社会推演的物种。', 'No species has finished the society simulation yet.')}</div>;
+  if (!s?.society) return <div className="py-24 text-center text-[14px] text-ink3">{L('还没有完成社会推演的物种。', 'No species has finished the society simulation yet.')}</div>;
   const soc = s.society; const posted = new Set(soc.posts.map(p => p.persona));
   const person = people.find(p => p.id === persona);
   const post = person ? soc.posts.find(p => p.persona === person.id) || soc.posts.find(p => p.arch === person.arch) : undefined;
@@ -75,55 +76,67 @@ export function Observatory({run, gameId, locale, people, archetypes, sid, onSel
     catch (e) { setErr(String(e)); } finally { setAsking(false); }
   };
   const m = soc.metrics;
-  return <div className="fade-up relative grid min-h-[680px] gap-6 lg:grid-cols-[260px_minmax(0,1fr)_320px]">
-    <div className="max-h-[720px] space-y-1 overflow-auto pr-2">
-      {alive.map(x => <button key={x.id} onClick={() => onSelect(x.id)} className={`block w-full border-l-2 px-4 py-3 text-left transition ${x.id === s.id ? 'border-primary bg-primary/10' : 'border-transparent hover:bg-white/5'}`}>
-        <div className="font-serif text-lg text-white">{x.name}</div>
-        <div className="font-mono text-[11px] text-muted"><span style={{color: geneOf(x.gene).color}}>●</span> {x.id} · {L(`第 ${x.gen} 代`, `gen ${x.gen}`)} · F {fmt(x.fitness?.F)} · S {fmt(x.society?.S)}</div>
-      </button>)}
-    </div>
-    <div className="relative min-h-[600px] rounded-2xl border border-border bg-[#060a10]/60">
-      <div className="absolute left-5 top-4 z-10">
-        <div className="flex items-baseline gap-3"><h3 className="font-serif text-3xl text-white">{s.name}</h3><span className="label-mono text-primary">{L(`第 ${day} 天`, `DAY ${day}`)}</span></div>
-        <div className="mt-2 space-y-1 text-xs text-muted">{[[0, L('还不知道这个游戏', 'unaware')], [1, L('在信息流里看到了', 'exposed')], [2, L('玩了并留下', 'tried & stayed')], [3, L('弃坑', 'quit')]].map(([k, l]) => <div key={k as number} className="flex items-center gap-2"><span className="inline-block h-2 w-2 rounded-full" style={{background: k === 1 ? 'transparent' : STATE_COLOR[k as number], border: k === 1 ? '1px solid #e8edf3' : 'none'}} />{l}</div>)}
-          <div className="flex items-center gap-2"><span className="inline-block h-2 w-2 rounded-full border border-amber" />{L('发帖的人设（可采访）', 'posted persona (interview)')}</div></div>
+  return <div className="fade-up relative grid min-h-[700px] gap-8 lg:grid-cols-[240px_minmax(0,1fr)_330px]">
+    <aside>
+      <div className="eyebrow mb-2 border-b border-ink pb-2">{L('物种', 'Species')} · {alive.length}</div>
+      <div className="max-h-[700px] divide-y divide-rule overflow-auto">
+        {alive.map(x => <button key={x.id} onClick={() => onSelect(x.id)} className={`relative block w-full py-3 pl-4 pr-2 text-left transition ${x.id === s.id ? 'bg-card' : 'hover:bg-card/60'}`}>
+          {x.id === s.id && <span className="absolute bottom-0 left-0 top-0 w-[3px] bg-vermilion" />}
+          <div className="flex items-center gap-2"><span className="inline-block h-2 w-2 shrink-0 rounded-full" style={{background: geneOf(x.gene).color}} /><span className="truncate font-serif text-[16px] font-semibold">{x.name}</span></div>
+          <div className="mt-0.5 font-mono text-[10.5px] text-ink3 num">{x.id} · F {fmt(x.fitness?.F)} · S {fmt(x.society?.S)}</div>
+        </button>)}
       </div>
-      <button className="label-mono absolute right-4 top-4 z-10 rounded-md border border-border px-3 py-2 hover:border-primary/60" onClick={() => onOpen(s.id)}>{L('查看标本', 'Open specimen')}</button>
-      <div className="absolute inset-0 pt-6"><Network people={people} timeline={soc.timeline} day={day} posted={posted} onPick={setPersona} archetypes={archetypes} /></div>
-      <div className="absolute bottom-4 left-5 right-5 flex items-center gap-4">
-        <button className="label-mono rounded-md border border-border px-3 py-2 text-text hover:border-primary/60" onClick={() => setPlaying(true)}>▶ {L('回放一周', 'Replay week')}</button>
-        <input aria-label="day" type="range" min={1} max={7} value={day} onChange={e => setDay(Number(e.target.value))} className="flex-1 accent-[#5eead4]" />
+    </aside>
+    <section className="relative min-h-[620px] border border-ink bg-card">
+      <div className="dotgrid absolute inset-0 opacity-60" />
+      <div className="absolute left-5 top-4 z-10 max-w-[60%]">
+        <div className="eyebrow">{L('图 · 口碑在 40 人关注网络中的扩散', 'Fig. · word of mouth over a 40-person follow graph')}</div>
+        <div className="mt-2 flex items-baseline gap-3"><h3 className="font-serif text-[28px] font-bold">{s.name}</h3><span className="font-display text-[22px] italic text-vermilion">{L(`第 ${day} 天`, `Day ${day}`)}</span></div>
       </div>
-    </div>
-    <div className="space-y-5">
-      <div className="grid grid-cols-2 overflow-hidden rounded-xl border border-border">
-        {[[L('触达', 'Reach'), pct(m.reach)], [L('尝试率', 'Try rate'), pct(m.tryRate)], [L('留存', 'Retention'), pct(m.retention)], [L('口碑', 'Sentiment'), (m.sentiment > 0 ? '+' : '') + fmt(m.sentiment)]].map(([k, v]) =>
-          <div key={k} className="border-b border-r border-border p-4 [&:nth-child(2n)]:border-r-0 [&:nth-last-child(-n+2)]:border-b-0"><div className="label-mono text-[10px]">{k}</div><div className="mt-1 font-serif text-3xl text-white">{v}</div></div>)}
+      <button className="btn-quiet absolute right-4 top-4 z-10 bg-card py-1.5 text-[12px]" onClick={() => onOpen(s.id)}>{L('查看标本', 'Open specimen')} →</button>
+      <div className="absolute inset-0 pb-14 pt-16"><Network people={people} timeline={soc.timeline} day={day} posted={posted} onPick={setPersona} archetypes={archetypes} /></div>
+      <div className="absolute bottom-0 left-0 right-0 z-10 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-ink bg-card px-5 py-3">
+        <button className="btn-quiet py-1 text-[12px]" onClick={() => setPlaying(true)}>▶ {L('回放一周', 'Replay week')}</button>
+        <input aria-label="day" type="range" min={1} max={7} value={day} onChange={e => setDay(Number(e.target.value))} className="scrub min-w-[120px] flex-1" />
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-ink2">{[[0, L('未接触', 'Unaware')], [1, L('看到了', 'Exposed')], [2, L('玩了并留下', 'Stayed')], [3, L('弃坑', 'Quit')]].map(([k, l]) => <span key={k as number} className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full" style={{background: k === 1 ? 'transparent' : STATE_COLOR[k as number], border: k === 1 ? '1.5px solid #1B1A17' : 'none'}} />{l}</span>)}
+          <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full border-[1.5px] border-ochre" />{L('发过帖，可采访', 'Posted · interview')}</span></div>
       </div>
-      <p className="font-serif leading-7 text-text/85">“{soc.summary}”</p>
-      <div className="label-mono">{L('帖子流 · 截至当天', 'Feed · up to today')}</div>
-      <div className="max-h-[400px] space-y-2 overflow-auto pr-2">{soc.posts.filter(p => p.day <= day).map(p => <button key={p.persona} onClick={() => setPersona(p.persona)} className="block w-full rounded-xl border border-border p-3 text-left text-sm hover:border-primary/40">
-        <div className="text-xs text-muted">{p.name} · {p.archLabel} · {L(`第 ${p.day} 天`, `day ${p.day}`)} · <span className="text-amber">{'★'.repeat(p.rating)}</span>{!p.stay && <span className="text-rose"> · {L('弃坑', 'quit')}</span>}</div>
-        <div className="mt-1 text-text/90">{p.text}</div>
-        {p.quit_reason && <div className="mt-1 text-xs text-rose/80">{L('弃坑原因：', 'Quit: ')}{p.quit_reason}</div>}
-      </button>)}</div>
-    </div>
-    {person && <div className="fade-up absolute bottom-0 right-0 top-0 z-20 flex w-full max-w-md flex-col rounded-2xl glass p-6 shadow-2xl">
-      <button className="label-mono absolute right-5 top-5 hover:text-text" onClick={() => setPersona(null)}>×</button>
-      <h3 className="font-serif text-4xl text-white">{person.name}</h3>
-      <div className="label-mono mt-1 text-primary">{person.archLabel} · {L('模拟玩家 · LLM 扮演', 'SIMULATED PLAYER · LLM')}</div>
-      <p className="mt-3 text-sm text-text/80">{person.bio} · {person.style}</p>
-      {post && <div className="mt-3 rounded-lg border border-border p-3 text-sm text-text/80"><span className="text-amber">{'★'.repeat(post.rating)}</span> {post.text}</div>}
-      <div className="mt-4 flex-1 space-y-3 overflow-auto">
-        {chat.length === 0 && <div className="rounded-lg border border-dashed border-border p-3 text-center text-sm text-muted">{L('（你可以问 TA 任何关于这款游戏的问题）', '(Ask anything about this game)')}</div>}
-        {chat.map((c, i) => <div key={i} className="space-y-2"><div className="ml-10 rounded-lg border border-primary/40 bg-primary/10 p-3 text-sm text-white">{c.q}</div><div className="mr-10 rounded-lg border border-border bg-white/5 p-3 text-sm text-text/90">{c.a}</div></div>)}
-        {asking && <div className="mr-10 rounded-lg border border-border p-3 text-sm text-muted">…</div>}
-        {err && <div className="text-sm text-rose">{err}</div>}
+    </section>
+    <aside className="space-y-6">
+      <div className="grid grid-cols-2 border-t border-ink">
+        {[[L('触达', 'Reach'), pct(m.reach)], [L('尝试率', 'Try rate'), pct(m.tryRate)], [L('留存', 'Retention'), pct(m.retention)], [L('口碑', 'Sentiment'), (m.sentiment > 0 ? '+' : '') + fmt(m.sentiment)]].map(([k, v], i) =>
+          <div key={k} className={`border-b border-rule py-4 ${i % 2 ? 'border-l pl-4' : ''}`}><div className="font-display text-[40px] leading-none num">{v}</div><div className="mt-1.5 text-[12px] text-ink3">{k}</div></div>)}
       </div>
-      <div className="mt-3 flex flex-wrap gap-2">{[L('你为什么给这个分？', 'Why that rating?'), L('如果让你改一个地方，你会改什么？', 'What one thing would you change?')].map(x => <button key={x} disabled={asking} onClick={() => ask(x)} className="rounded-full border border-border px-3 py-1 text-xs text-muted hover:text-text">{x}</button>)}</div>
+      <blockquote className="relative pl-6 font-serif text-[15px] leading-7"><span className="absolute -top-1 left-0 font-display text-[36px] leading-none text-vermilion">“</span>{soc.summary}</blockquote>
+      <div>
+        <div className="eyebrow mb-1 border-b border-ink pb-2">{L('帖子 · 截至当天', 'Feed · up to today')}</div>
+        <div className="max-h-[400px] divide-y divide-rule overflow-auto">{soc.posts.filter(p => p.day <= day).map(p => <button key={p.persona} onClick={() => setPersona(p.persona)} className="group block w-full py-3 text-left">
+          <div className="flex flex-wrap items-baseline gap-x-2 text-[12px] text-ink3"><span className="font-medium text-ink group-hover:text-vermilion">{p.name}</span><span>{p.archLabel}</span><span>· {L(`第 ${p.day} 天`, `day ${p.day}`)}</span><Stars n={p.rating} />{!p.stay && <span className="text-vermilion">{L('弃坑', 'quit')}</span>}</div>
+          <div className="mt-1 text-[14px] leading-6">{p.text}</div>
+          {p.quit_reason && <div className="mt-1 text-[12px] text-vermilion">{L('弃坑原因：', 'Quit: ')}{p.quit_reason}</div>}
+        </button>)}</div>
+      </div>
+    </aside>
+    {person && <div className="fade-up absolute bottom-0 right-0 top-0 z-20 flex w-full max-w-[440px] flex-col border border-ink bg-card p-7 shadow-lift">
+      <button className="absolute right-5 top-4 text-[22px] leading-none text-ink3 hover:text-ink" aria-label="close" onClick={() => setPersona(null)}>×</button>
+      <div className="eyebrow">{L('采访记录', 'Interview transcript')}</div>
+      <h3 className="mt-3 font-serif text-[36px] font-bold leading-none">{person.name}</h3>
+      <div className="mt-2 text-[12px] text-ink3">{person.archLabel} · <span className="text-vermilion">{L('模拟玩家 · LLM 扮演', 'Simulated player · LLM')}</span></div>
+      <p className="mt-4 text-[13px] leading-6 text-ink2">{person.bio} · {person.style}</p>
+      {post && <div className="mt-4 border-y border-rule py-3 text-[13px] leading-6"><Stars n={post.rating} /> <span className="font-serif">{post.text}</span></div>}
+      <div className="mt-5 flex-1 space-y-5 overflow-auto pr-1">
+        {chat.length === 0 && <div className="border border-dashed border-rule p-4 text-center text-[13px] text-ink3">{L('可以问 TA 任何关于这款游戏的问题', 'Ask anything about this game')}</div>}
+        {chat.map((c, i) => <div key={i} className="space-y-2">
+          <div className="grid grid-cols-[22px_1fr] gap-2 text-[14px] leading-6"><span className="font-serif font-bold text-ink3">{L('问', 'Q')}</span><span className="font-medium">{c.q}</span></div>
+          <div className="grid grid-cols-[22px_1fr] gap-2 font-serif text-[15px] leading-7"><span className="font-bold text-vermilion">{L('答', 'A')}</span><span>{c.a}</span></div>
+        </div>)}
+        {asking && <div className="grid grid-cols-[22px_1fr] gap-2 font-serif text-[15px]"><span className="font-bold text-vermilion">{L('答', 'A')}</span><span className="breathe text-ink3">……</span></div>}
+        {err && <div className="text-[13px] text-vermilion">{err}</div>}
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2">{[L('你为什么给这个分？', 'Why that rating?'), L('如果让你改一个地方，你会改什么？', 'What one thing would you change?')].map(x => <button key={x} disabled={asking} onClick={() => ask(x)} className="border border-rule px-2.5 py-1 text-[12px] text-ink2 transition hover:border-ink disabled:opacity-40">{x}</button>)}</div>
       <form className="mt-3 flex gap-2" onSubmit={e => { e.preventDefault(); ask(q); }}>
-        <input value={q} onChange={e => setQ(e.target.value)} placeholder={L('比如：你为什么弃坑？', 'e.g. why did you quit?')} className="flex-1 rounded-lg border border-border bg-panel2 px-3 py-3 text-sm outline-none focus:border-primary/60" />
-        <button disabled={asking || !q.trim()} className="rounded-lg bg-primary px-5 text-sm font-semibold text-[#04211c] disabled:opacity-40">{L('问', 'Ask')}</button>
+        <input value={q} onChange={e => setQ(e.target.value)} placeholder={L('比如：你为什么弃坑？', 'e.g. why did you quit?')} className="field flex-1" />
+        <button disabled={asking || !q.trim()} className="btn-ink px-5">{L('提问', 'Ask')}</button>
       </form>
     </div>}
   </div>;

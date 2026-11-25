@@ -10,7 +10,7 @@ function layout(species: Species[], w: number, h: number, left = 0) {
   const roots = byParent.get(null) || [];
   const leaves = (s: Species): number => { const c = byParent.get(s.id) || []; return c.length ? c.reduce((a, x) => a + leaves(x), 0) : 1; };
   const maxGen = Math.max(1, ...species.map(s => s.gen));
-  const cx = left + (w - left) / 2, cy = h / 2 - 10; const R = Math.min(w - left, h) * 0.43; const dr = R / (maxGen + 0.35);
+  const usable = h - 56; const cx = left + (w - left - (left ? 140 : 0)) / 2, cy = usable / 2; const R = Math.min(w - left - (left ? 140 : 0), usable) * 0.41; const dr = R / (maxGen + 0.35);
   const nodes = new Map<string, Node>();
   const place = (s: Species, a0: number, a1: number, depth: number) => {
     const angle = (a0 + a1) / 2;
@@ -58,7 +58,8 @@ export function Galaxy({species, champion, focus, onOpen, locale, live, generati
   useEffect(() => {
     const canvas = cv.current!; const ctx = canvas.getContext('2d')!; let raf = 0; const dpr = Math.min(2, window.devicePixelRatio || 1);
     const t0 = performance.now();
-    const dust = Array.from({length: 260}, (_, i) => ({a: (i * 2.399) % (Math.PI * 2), r: 0.05 + ((i * 0.6180339) % 1) * 1.05, s: 0.02 + ((i * 0.37) % 1) * 0.06, z: (i * 0.731) % 1}));
+    const INK = '#1B1A17', INK3 = '#7A7466', PAPER = '#F2EEE4', RED = '#B8401F';
+    const alpha = (hex: string, a: number) => hex + Math.round(Math.max(0, Math.min(1, a)) * 255).toString(16).padStart(2, '0');
     const draw = (now: number) => {
       const {geo, hover, focus, champion} = state.current; const t = (now - t0) / 1000;
       const w = canvas.clientWidth, h = canvas.clientHeight;
@@ -66,22 +67,20 @@ export function Galaxy({species, champion, focus, onOpen, locale, live, generati
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
       const {cx, cy, dr, nodes} = geo; const R = dr * (geo.maxGen + 0.35);
       for (const id of nodes.keys()) if (!born.current.has(id)) born.current.set(id, now);
-      // core glow
-      const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 1.1);
-      core.addColorStop(0, 'rgba(94,234,212,0.10)'); core.addColorStop(0.35, 'rgba(167,139,250,0.05)'); core.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = core; ctx.beginPath(); ctx.arc(cx, cy, R * 1.1, 0, 7); ctx.fill();
+      // compass ticks around the outer ring, like a printed chart
+      ctx.strokeStyle = alpha(INK, 0.22); ctx.lineWidth = 1;
+      for (let k = 0; k < 120; k++) {
+        const a = (k / 120) * Math.PI * 2; const l = k % 10 === 0 ? 9 : 4;
+        ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * (R + 14), cy + Math.sin(a) * (R + 14)); ctx.lineTo(cx + Math.cos(a) * (R + 14 + l), cy + Math.sin(a) * (R + 14 + l)); ctx.stroke();
+      }
+      ctx.strokeStyle = alpha(INK, 0.5); ctx.beginPath(); ctx.arc(cx, cy, R + 14, 0, 7); ctx.stroke();
       // generation rings
       for (let g = 1; g <= geo.maxGen; g++) {
-        ctx.strokeStyle = 'rgba(148,163,184,0.10)'; ctx.setLineDash([2, 6]); ctx.lineWidth = 1;
+        ctx.strokeStyle = alpha(INK, 0.16); ctx.setLineDash([1.5, 4.5]); ctx.lineWidth = 1;
         ctx.beginPath(); ctx.arc(cx, cy, g * dr, 0, 7); ctx.stroke(); ctx.setLineDash([]);
-        ctx.fillStyle = 'rgba(148,163,184,0.45)'; ctx.font = '10px "JetBrains Mono", monospace'; ctx.textAlign = 'center';
-        ctx.fillText(zh ? `第 ${g} 代` : `GEN ${g}`, cx, cy - g * dr - 6);
-      }
-      // orbiting dust
-      for (const d of dust) {
-        const a = d.a + t * d.s * 0.4; const r = d.r * R;
-        ctx.fillStyle = `rgba(200,220,255,${0.08 + d.z * 0.18})`;
-        ctx.fillRect(cx + Math.cos(a) * r, cy + Math.sin(a) * r * 0.98, 1.1, 1.1);
+        const label = zh ? `第 ${g} 代` : `GEN ${g}`; ctx.font = '11px "Noto Serif SC", serif'; ctx.textAlign = 'center';
+        const tw = ctx.measureText(label).width; ctx.fillStyle = PAPER; ctx.fillRect(cx - tw / 2 - 5, cy - g * dr - 8, tw + 10, 15);
+        ctx.fillStyle = INK3; ctx.fillText(label, cx, cy - g * dr + 4);
       }
       const nodeAt = (id: string | null) => (id ? nodes.get(id) : undefined);
       const path: Node[] = []; let cur = nodeAt(hover || focus || null);
@@ -89,75 +88,74 @@ export function Galaxy({species, champion, focus, onOpen, locale, live, generati
       // edges
       for (const n of nodes.values()) {
         const p = nodeAt(n.s.parent); if (!p) continue;
-        const col = geneOf(n.s.gene).color; const lit = path.includes(n);
+        const col = geneOf(n.s.gene).color; const lit = path.includes(n); const alive = n.s.status === 'alive';
         const age = Math.min(1, (now - (born.current.get(n.s.id) || 0)) / 900);
-        const midA = n.angle; const midR = Math.max(p.ring, n.ring - 0.5) * dr;
-        const qx = cx + Math.cos(midA) * midR, qy = cy + Math.sin(midA) * midR;
-        const g = ctx.createLinearGradient(p.x, p.y, n.x, n.y);
-        g.addColorStop(0, 'rgba(232,237,243,0.15)'); g.addColorStop(1, col + (n.s.status === 'alive' ? (lit ? 'ff' : 'aa') : '44'));
-        ctx.strokeStyle = g; ctx.lineWidth = lit ? 2.4 : n.s.status === 'alive' ? 1.3 : 0.8;
-        if (n.s.status !== 'alive') ctx.setLineDash([3, 4]);
+        const midR = Math.max(p.ring, n.ring - 0.5) * dr;
+        const qx = cx + Math.cos(n.angle) * midR, qy = cy + Math.sin(n.angle) * midR;
+        ctx.strokeStyle = lit ? INK : alpha(col, alive ? 0.8 : 0.4); ctx.lineWidth = lit ? 2.4 : alive ? 1.4 : 1;
+        if (!alive) ctx.setLineDash([3, 3]);
         ctx.beginPath(); ctx.moveTo(p.x, p.y);
-        const ex = p.x + (n.x - p.x) * age, ey = p.y + (n.y - p.y) * age;
-        ctx.quadraticCurveTo(p.x + (qx - p.x) * age, p.y + (qy - p.y) * age, ex, ey); ctx.stroke(); ctx.setLineDash([]);
+        ctx.quadraticCurveTo(p.x + (qx - p.x) * age, p.y + (qy - p.y) * age, p.x + (n.x - p.x) * age, p.y + (n.y - p.y) * age); ctx.stroke(); ctx.setLineDash([]);
       }
-      // lineage pulse travelling back to the origin
+      // a small mark travelling back along the hovered lineage
       if (path.length > 1) {
-        const seg = (t * 1.6) % (path.length - 1); const i = Math.floor(seg); const f = seg - i;
+        const seg = (t * 1.2) % (path.length - 1); const i = Math.floor(seg); const f = seg - i;
         const a = path[i], b = path[i + 1];
-        const x = a.x + (b.x - a.x) * f, y = a.y + (b.y - a.y) * f;
-        const glow = ctx.createRadialGradient(x, y, 0, x, y, 16);
-        glow.addColorStop(0, 'rgba(255,255,255,0.95)'); glow.addColorStop(0.3, geneOf(a.s.gene).color + 'aa'); glow.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(x, y, 16, 0, 7); ctx.fill();
+        ctx.fillStyle = RED; ctx.beginPath(); ctx.arc(a.x + (b.x - a.x) * f, a.y + (b.y - a.y) * f, 3, 0, 7); ctx.fill();
       }
-      // stars
+      // specimens
       for (const n of nodes.values()) {
         const age = Math.min(1, (now - born.current.get(n.s.id)!) / 900);
         const ease = 1 - Math.pow(1 - age, 3);
         const col = geneOf(n.s.gene).color; const lit = path.includes(n) || n.s.id === hover;
-        const r = n.r * ease * (lit ? 1.25 : 1);
-        if (age < 1) { ctx.strokeStyle = col + Math.round((1 - age) * 200).toString(16).padStart(2, '0'); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(n.x, n.y, r + 30 * age, 0, 7); ctx.stroke(); }
+        const r = n.r * ease * (lit ? 1.18 : 1);
+        if (age < 1) { ctx.strokeStyle = alpha(col, (1 - age) * 0.8); ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(n.x, n.y, r + 26 * age, 0, 7); ctx.stroke(); }
         if (n.s.status === 'alive') {
-          const halo = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, r * 4.5);
-          halo.addColorStop(0, col + 'aa'); halo.addColorStop(1, 'rgba(0,0,0,0)');
-          ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(n.x, n.y, r * 4.5, 0, 7); ctx.fill();
-          ctx.fillStyle = n.s.promoted || n.s.root ? '#ffffff' : col; ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, 7); ctx.fill();
-          ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(n.x, n.y, r + 1.5, 0, 7); ctx.stroke();
-          if (n.s.elite) { ctx.strokeStyle = 'rgba(232,237,243,0.55)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(n.x, n.y, r + 6, 0, 7); ctx.stroke(); }
+          ctx.fillStyle = PAPER; ctx.beginPath(); ctx.arc(n.x, n.y, r + 2.5, 0, 7); ctx.fill();
+          ctx.fillStyle = col; ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, 7); ctx.fill();
+          if (n.s.root || n.s.promoted) { ctx.fillStyle = PAPER; ctx.beginPath(); ctx.arc(n.x, n.y, Math.max(1.6, r * 0.32), 0, 7); ctx.fill(); }
+          if (lit) { ctx.strokeStyle = INK; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(n.x, n.y, r + 3.5, 0, 7); ctx.stroke(); }
+          if (n.s.elite) { ctx.strokeStyle = alpha(INK, 0.55); ctx.lineWidth = 1; ctx.setLineDash([2, 2.5]); ctx.beginPath(); ctx.arc(n.x, n.y, r + 6, 0, 7); ctx.stroke(); ctx.setLineDash([]); }
           if (n.s.id === champion) {
-            const spin = t * 0.8;
-            ctx.strokeStyle = '#f2b66d'; ctx.lineWidth = 1.6;
-            for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.arc(n.x, n.y, r + 11, spin + k * Math.PI / 2, spin + k * Math.PI / 2 + 0.9); ctx.stroke(); }
+            ctx.strokeStyle = RED; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(n.x, n.y, r + 10, 0, 7); ctx.stroke();
+            ctx.lineWidth = 0.8; ctx.beginPath(); ctx.arc(n.x, n.y, r + 13.5, 0, 7); ctx.stroke();
           }
         } else if (n.s.status === 'embryo') {
-          const p = 0.5 + 0.5 * Math.sin(t * 5);
-          ctx.strokeStyle = `rgba(94,234,212,${0.4 + 0.5 * p})`; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(n.x, n.y, 5 + 4 * p, 0, 7); ctx.stroke();
-          ctx.fillStyle = 'rgba(94,234,212,0.9)'; ctx.beginPath(); ctx.arc(n.x, n.y, 2.5, 0, 7); ctx.fill();
+          const p = 0.5 + 0.5 * Math.sin(t * 4);
+          ctx.strokeStyle = alpha(RED, 0.35 + 0.5 * p); ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(n.x, n.y, 5 + 4 * p, 0, 7); ctx.stroke();
+          ctx.fillStyle = RED; ctx.beginPath(); ctx.arc(n.x, n.y, 2.4, 0, 7); ctx.fill();
         } else {
-          ctx.strokeStyle = n.s.status === 'invalid' ? 'rgba(255,107,107,0.75)' : 'rgba(148,163,184,0.55)'; ctx.lineWidth = 1.2;
+          ctx.strokeStyle = n.s.status === 'invalid' ? RED : alpha(INK, 0.6); ctx.lineWidth = 1.4;
           ctx.beginPath(); ctx.moveTo(n.x - 4, n.y - 4); ctx.lineTo(n.x + 4, n.y + 4); ctx.moveTo(n.x + 4, n.y - 4); ctx.lineTo(n.x - 4, n.y + 4); ctx.stroke();
         }
       }
-      // labels
+      // labels, set like museum captions
       const alive = [...nodes.values()].filter(n => n.s.status === 'alive' && n.s.name).sort((a, b) => (b.s.fitness?.F ?? 0) - (a.s.fitness?.F ?? 0));
       const labelled = new Set<Node>([...alive.slice(0, 3)]);
       for (const id of [champion, hover, focus]) { const n = nodeAt(id || null); if (n && n.s.name) labelled.add(n); }
+      const root = [...nodes.values()].find(n => n.s.parent === null); if (root && root.s.name) labelled.add(root);
       const boxes: [number, number, number, number][] = [];
       for (const n of labelled) {
-        let right = n.x >= cx; let lx = n.x + (right ? 18 : -18), ly = n.y - 12;
+        let right = n.x >= cx; let lx = n.x + (right ? 22 : -22), ly = n.y - 12;
         const hit = (x: number, y: number, r: boolean) => boxes.some(b => { const x0 = r ? x : x - 190, x1 = r ? x + 190 : x; return x0 < b[2] && x1 > b[0] && y - 18 < b[3] && y + 34 > b[1]; });
         for (let k = 0; k < 6 && hit(lx, ly, right); k++) {
-          if (k === 0) { right = !right; lx = n.x + (right ? 18 : -18); continue; }
-          ly += 44 * (k % 2 ? 1 : -1) * Math.ceil(k / 2);
+          if (k === 0) { right = !right; lx = n.x + (right ? 22 : -22); continue; }
+          ly += 46 * (k % 2 ? 1 : -1) * Math.ceil(k / 2);
         }
         boxes.push([right ? lx : lx - 190, ly - 18, right ? lx + 190 : lx, ly + 34]);
-        ctx.strokeStyle = 'rgba(232,237,243,0.45)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(lx, ly - 14); ctx.lineTo(lx, ly + 26); ctx.stroke();
-        ctx.textAlign = right ? 'left' : 'right'; const tx = lx + (right ? 8 : -8);
-        ctx.fillStyle = '#f5f7fa'; ctx.font = '600 17px "Noto Serif SC", serif'; ctx.fillText(n.s.name, tx, ly + 2);
-        ctx.fillStyle = 'rgba(232,237,243,0.6)'; ctx.font = 'italic 12px Georgia, serif'; ctx.fillText(n.s.latin || '', tx, ly + 17);
-        ctx.fillStyle = n.s.id === champion ? '#f2b66d' : geneOf(n.s.gene).color; ctx.font = '10px "JetBrains Mono", monospace';
         const meta = `${n.s.id === champion ? (zh ? '冠军 · ' : 'CHAMPION · ') : ''}${zh ? `第 ${n.s.gen} 代` : `GEN ${n.s.gen}`} · ${zh ? geneOf(n.s.gene).zh : geneOf(n.s.gene).en} · F ${fmt(n.s.fitness?.F)}`;
-        ctx.fillText(meta, tx, ly + 31);
+        ctx.font = '600 16px "Noto Serif SC", serif'; const w1 = ctx.measureText(n.s.name).width;
+        ctx.font = 'italic 14px "Instrument Serif", Georgia, serif'; const w2 = ctx.measureText(n.s.latin || '').width;
+        ctx.font = '10px "IBM Plex Mono", monospace'; const w3 = ctx.measureText(meta).width;
+        const bw = Math.max(w1, w2, w3) + 14; const tx = lx + (right ? 9 : -9);
+        ctx.fillStyle = alpha(PAPER, 0.88); ctx.fillRect(right ? lx : lx - bw, ly - 16, bw, 52);
+        ctx.strokeStyle = alpha(INK, 0.55); ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(n.x + (right ? n.r + 4 : -n.r - 4), n.y); ctx.lineTo(lx, ly + 10); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(lx, ly - 14); ctx.lineTo(lx, ly + 34); ctx.stroke();
+        ctx.textAlign = right ? 'left' : 'right';
+        ctx.fillStyle = INK; ctx.font = '600 16px "Noto Serif SC", serif'; ctx.fillText(n.s.name, tx, ly + 2);
+        ctx.fillStyle = INK3; ctx.font = 'italic 14px "Instrument Serif", Georgia, serif'; ctx.fillText(n.s.latin || '', tx, ly + 18);
+        ctx.fillStyle = n.s.id === champion ? RED : INK3; ctx.font = '10px "IBM Plex Mono", monospace'; ctx.fillText(meta, tx, ly + 31);
       }
       raf = requestAnimationFrame(draw);
     };
@@ -177,19 +175,19 @@ export function Galaxy({species, champion, focus, onOpen, locale, live, generati
   };
   const hovered = hover ? species.find(s => s.id === hover) : null;
   return <div className="relative h-full w-full" ref={wrap}>
-    <canvas ref={cv} className="absolute inset-0 h-full w-full cursor-crosshair" onMouseMove={e => setHover(pick(e))} onMouseLeave={() => setHover(null)} onClick={e => { const id = pick(e); if (id) onOpen(id); }} />
-    {hovered && hovered.status !== 'alive' && <div className="pointer-events-none absolute left-4 top-4 max-w-sm rounded-xl glass p-3 text-xs text-muted">
-      <div className="font-serif text-base text-text">{hovered.name || hovered.id}</div>
-      <div>{hovered.status === 'embryo' ? (zh ? '胚胎 · 正在制作与试玩' : 'Embryo · being built and played') : hovered.status === 'stillborn' ? (zh ? '夭折 · 制作未通过校验' : 'Stillborn · build failed validation') : (zh ? '淘汰 · 真实试玩中崩溃' : 'Invalid · crashed in real play')}</div>
-      {hovered.error && <div className="mt-1 text-rose/80">{hovered.error}</div>}
-      {hovered.play?.errors?.[0] && <div className="mt-1 text-rose/80">{hovered.play.errors[0].slice(0, 160)}</div>}
+    <canvas ref={cv} className={`absolute inset-0 h-full w-full ${hover ? 'cursor-pointer' : 'cursor-default'}`} onMouseMove={e => setHover(pick(e))} onMouseLeave={() => setHover(null)} onClick={e => { const id = pick(e); if (id) onOpen(id); }} />
+    {hovered && hovered.status !== 'alive' && <div className="pointer-events-none absolute bottom-16 left-0 z-20 max-w-[320px] border border-ink bg-card p-4 text-[12px] leading-5 text-ink2 shadow-plate lg:left-[340px]">
+      <div className="font-serif text-[15px] font-semibold text-ink">{hovered.name || hovered.id}</div>
+      <div className="mt-0.5">{hovered.status === 'embryo' ? (zh ? '胚胎 · 正在制作与试玩' : 'Embryo · being built and played') : hovered.status === 'stillborn' ? (zh ? '夭折 · 制作未通过校验' : 'Stillborn · build failed validation') : (zh ? '淘汰 · 真实试玩中崩溃' : 'Invalid · crashed in real play')}</div>
+      {hovered.error && <div className="mt-1.5 font-mono text-[11px] text-vermilion">{hovered.error}</div>}
+      {hovered.play?.errors?.[0] && <div className="mt-1.5 font-mono text-[11px] text-vermilion">{hovered.play.errors[0].slice(0, 160)}</div>}
     </div>}
-    <div className="absolute bottom-0 left-0 right-0 flex items-center gap-4 px-2 pb-1">
-      <button className="label-mono rounded-full border border-border px-3 py-1.5 text-text hover:border-primary/60" onClick={() => setPlaying(true)} disabled={playing || maxGen === 0}>▶ {zh ? '回放进化' : 'Replay'}</button>
-      <span className="label-mono w-20 text-text">{zh ? `第 ${cutoff ?? maxGen} 代` : `GEN ${cutoff ?? maxGen}`}</span>
-      <input aria-label="generation" type="range" min={0} max={Math.max(1, maxGen)} value={cutoff ?? maxGen} onChange={e => setCutoff(Number(e.target.value) >= maxGen ? null : Number(e.target.value))} className="flex-1 accent-[#5eead4]" />
-      {live && <span className="label-mono flex items-center gap-2 text-primary"><span className="pulse-ring inline-block h-2 w-2 rounded-full bg-primary" />{zh ? `进化中 · 第 ${generation ?? 0} 代` : `EVOLVING · GEN ${generation ?? 0}`}</span>}
-      {likes && <span className="label-mono hidden md:inline">♥ {Object.values(likes).reduce((a, b) => a + b, 0)}</span>}
+    <div className="absolute bottom-0 left-0 right-0 flex items-center gap-4 border-t border-ink bg-paper pt-3 lg:left-[340px]">
+      <button className="btn-quiet py-1.5 text-[12px]" onClick={() => setPlaying(true)} disabled={playing || maxGen === 0}>▶ {zh ? '回放进化' : 'Replay'}</button>
+      <span className="w-16 font-mono text-[11px] text-ink2 num">{zh ? `第 ${cutoff ?? maxGen} 代` : `GEN ${cutoff ?? maxGen}`}</span>
+      <input aria-label="generation" type="range" min={0} max={Math.max(1, maxGen)} value={cutoff ?? maxGen} onChange={e => setCutoff(Number(e.target.value) >= maxGen ? null : Number(e.target.value))} className="scrub flex-1" />
+      {live && <span className="flex items-center gap-2 font-mono text-[11px] text-vermilion"><span className="breathe inline-block h-2 w-2 rounded-full bg-vermilion" />{zh ? `进化中 · 第 ${generation ?? 0} 代` : `EVOLVING · GEN ${generation ?? 0}`}</span>}
+      {likes && <span className="hidden font-mono text-[11px] text-ink3 md:inline">♥ {Object.values(likes).reduce((a, b) => a + b, 0)} {zh ? '次真人选择' : 'human picks'}</span>}
     </div>
   </div>;
 }

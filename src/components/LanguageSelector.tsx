@@ -20,13 +20,18 @@ export function LanguageSelector() {
   };
 
   return (
-    <select
-      value={currentLocale}
-      onChange={(e) => handleChange(e.target.value)}
-      className="rounded-lg border border-border bg-panel2 px-2 py-1 text-sm outline-none cursor-pointer hover:border-primary/50 transition-colors"
-    >
-      <option value="en">English</option>
-      <option value="zh">中文</option>
-    </select>
+    <div className={`flex items-center border border-ink/70 font-mono text-[11px] ${isPending ? 'opacity-60' : ''}`} role="group" aria-label="Language">
+      {([['zh', '中'], ['en', 'EN']] as const).map(([code, label], i) => (
+        <button
+          key={code}
+          type="button"
+          onClick={() => code !== currentLocale && handleChange(code)}
+          aria-pressed={code === currentLocale}
+          className={`px-2 py-1 transition ${i ? 'border-l border-ink/70' : ''} ${code === currentLocale ? 'bg-ink text-paper' : 'text-ink2 hover:bg-ink/5'}`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
   );
 }
