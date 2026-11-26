@@ -8,6 +8,7 @@ import { configuredModels } from './providers';
 import { loadGameRecord, saveGameRecord } from './store';
 import { generationFingerprint, canResumeGeneration } from './generationConfig';
 import { snapshotGame } from './versions';
+import { studioEnabled, studioProgress } from './studio';
 
 export async function generateGame(input: Record<string, any>, emit: (event: any) => Promise<void> = async () => {}) {
   const mode = input.mode;
@@ -26,7 +27,15 @@ export async function generateGame(input: Record<string, any>, emit: (event: any
     const exists = step.id === 'game' ? record?.gameHtml : step.id === 'images' ? false : (record as any)?.[step.id];
     if (!exists) {
       await emit({type:'step',id:step.id,status:'running',percent:Math.round(i/3*100),message:step.title});
-      const response = await step.handler(new Request('http://internal/stage',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}));
+      // While a dsh studio builds the game, stream its real progress (it can take tens of minutes).
+      let seen=0;
+      const watch=step.id==='game' && body.gameId && studioEnabled(String(record?.textModel||body.textModel)) ? setInterval(async()=>{
+        const live=await studioProgress(body.gameId,seen).catch(()=>null); if(!live) return;
+        for(const line of live.fresh.slice(-6)) await emit({type:'log',level:'info',message:'制作组 · '+line});
+        seen=live.calls;
+        await emit({type:'step',id:step.id,status:'running',percent:Math.round(i/3*100),message:`dsh 制作组开发中 · 工具调用 ${live.calls} · 自测 ${live.playtests} 次 · 看截图 ${live.images} 张`});
+      },4000) : null;
+      const response = await step.handler(new Request('http://internal/stage',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)})).finally(()=>{if(watch) clearInterval(watch);});
       const data=await response.json();
       if (!response.ok || !data.ok) throw new Error(data.error || `${step.title} failed`);
       body.gameId=data.gameId;

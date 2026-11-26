@@ -17,10 +17,13 @@ import json
 import os
 from pathlib import Path
 import shutil
+import signal
 import subprocess
 import sys
 import time
 import uuid
+
+RUNNING = set()  # live dsh processes, terminated if this process is told to stop
 
 HERE = Path(__file__).resolve().parent
 PROJECT = HERE.parent
@@ -97,6 +100,7 @@ def run_team(workdir, task, log, minutes=25, session=None, should_stop=None):
     with log.open('a', encoding='utf-8') as out, log.with_suffix('.err').open('a', encoding='utf-8') as err:
         process = subprocess.Popen(command, cwd=workdir, env=team_env(), stdout=out, stderr=err, stdin=subprocess.DEVNULL,
                                    start_new_session=True)
+        RUNNING.add(process)
         timed_out = stopped = False
         while process.poll() is None:
             if should_stop and should_stop():
@@ -111,6 +115,7 @@ def run_team(workdir, task, log, minutes=25, session=None, should_stop=None):
                     process.kill()
                 break
             time.sleep(1)
+    RUNNING.discard(process)
     result = summarize_log(log)
     result.update(minutes=round((time.time() - started) / 60, 1), timedOut=timed_out, stopped=stopped, exit=process.returncode)
     return result
@@ -273,7 +278,17 @@ def critique_markdown(critique, prefix='R'):
     return '\n'.join(lines) + '\n'
 
 
+def _stop(signum, frame):
+    for process in list(RUNNING):
+        try:
+            os.killpg(process.pid, signal.SIGTERM)
+        except OSError:
+            pass
+    sys.exit(143)
+
+
 if __name__ == '__main__':
+    signal.signal(signal.SIGTERM, _stop)
     sys.path.insert(0, str(HERE))
     if len(sys.argv) != 3 or sys.argv[1] != 'origin':
         print(__doc__)

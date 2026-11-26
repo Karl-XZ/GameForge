@@ -657,7 +657,7 @@ export default function Home() {
               setGameId(evt.result.gameId);
               await loadGame(evt.result.gameId);
               if (autoEvolve && mode === "side-scroller") {
-                const r = await fetch(`/api/improve/${evt.result.gameId}`, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({kind: "evolve", requestId: crypto.randomUUID(), goal: uiLocale === 'zh' ? '让新玩家更快理解目标，跳跃手感更好，节奏更紧凑，同时让游戏更有个性。' : 'Clearer goals, better jump feel, tighter pacing, more personality.', budgets: {generations: 3, children: 2, calls: 44, minutes: 60, episodes: 3}})});
+                const r = await fetch(`/api/improve/${evt.result.gameId}`, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({kind: "evolve", requestId: crypto.randomUUID(), goal: uiLocale === 'zh' ? '让新玩家更快理解目标，跳跃手感更好，节奏更紧凑，同时让游戏更有个性。' : 'Clearer goals, better jump feel, tighter pacing, more personality.', constraints: uiLocale === 'zh' ? '改动不设上限，可以重做画面、玩法和关卡；必须遵守技术约定（单文件、GameAgentBridge、真实键盘操作），不得作弊。' : 'No limit on the size of a change; the technical contract (single file, GameAgentBridge, real keyboard input) holds; no cheats.', budgets: {generations: 3, children: 4, teamMinutes: 25, calls: 160, minutes: 300, episodes: 3}})});
                 if (r.ok) setTab("galaxy"); else pushLog("warn", (await r.json().catch(() => null))?.error || "evolution did not start");
               }
             }
@@ -888,7 +888,7 @@ export default function Home() {
               <input type="checkbox" className="tick mt-0.5" checked={autoEvolve} onChange={e => setAutoEvolve(e.target.checked)} />
               <span>
                 <span className="heavy block text-[15px]">{L('生成后立即开始达尔文进化', 'Start Darwin evolution right after')}</span>
-                <span className="mt-1 block text-[12px] leading-5 text-ink2">{L('3 代，每代 2 个后代；真实试玩、双盲评、玩家社会，约 44 次模型调用', '3 generations × 2 children; real playtests, blind reviews, player society; ~44 calls')}</span>
+                <span className="mt-1 block text-[12px] leading-5 text-ink2">{L('3 代，每代 4 个 dsh 制作组按真实评价自由修改；真实试玩、严苛评审、双盲评、玩家社会', '3 generations × 4 dsh studios changing freely from real reviews; real playtests, harsh critic, blind reviews, player society')}</span>
               </span>
             </label>}
             <div className="flex gap-3 pt-1">

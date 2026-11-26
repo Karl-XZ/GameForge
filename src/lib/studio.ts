@@ -52,3 +52,24 @@ export async function buildWithStudio(opts: { gameId: string; prompt: string; la
   };
   return { html, report: summary };
 }
+
+/** Live view of the newest studio log for a game: counts plus the tool events after `seen`. */
+export async function studioProgress(gameId: string, seen: number) {
+  const base = path.join(dataRoot(), safeId(gameId), 'studio');
+  const dirs = (await fs.readdir(base).catch(() => [] as string[])).filter((d) => d.startsWith('origin-')).sort();
+  if (!dirs.length) return null;
+  const text = await fs.readFile(path.join(base, dirs[dirs.length - 1], '.studio', 'origin.jsonl'), 'utf8').catch(() => '');
+  const calls = text.split('\n').filter(Boolean).map((l) => { try { return JSON.parse(l); } catch { return null; } }).filter((e) => e?.type === 'tool_call');
+  const isTest = (e: any) => e.tool === 'bash' && JSON.stringify(e.input || {}).includes('playtest.py');
+  const describe = (e: any) => {
+    if (isTest(e)) return '运行试玩自测';
+    if (e.tool === 'read_image') return '查看截图 ' + String(e.input?.file_path || '').split('/').pop();
+    if (e.tool === 'write') return '写入 ' + String(e.input?.file_path || '').split('/').pop();
+    if (e.tool === 'edit' || e.tool === 'apply_patch') return '修改 ' + (String(e.input?.file_path || '').split('/').pop() || '代码');
+    return '';
+  };
+  return {
+    calls: calls.length, playtests: calls.filter(isTest).length, images: calls.filter((e) => e.tool === 'read_image').length,
+    fresh: calls.slice(seen).map(describe).filter(Boolean),
+  };
+}
