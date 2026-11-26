@@ -32,6 +32,7 @@ export type GameRecord = {
   generationConfig?: string;
   warnings?: string[];
   metrics?: Record<string, { startedAt: string; endedAt?: string; durationMs?: number }>;
+  studio?: { minutes: number; toolCalls: number; playtests: number; imagesViewed: number; revised: boolean; critique?: any; final?: string };
 };
 
 const isVercel = !!process.env.VERCEL;

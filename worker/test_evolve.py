@@ -75,7 +75,7 @@ class EvolveTest(unittest.TestCase):
         run = bare()
         def species(sid, review):
             s = {'id': sid, 'gene': 'feedback', 'status': 'alive', 'diffChars': 900, 'elite': False,
-                 'metrics': {'challenge': 0.0, 'progress': 0.05}, 'fitness': {'review': review, 'social': 0.5, 'progress': 0.05, 'novelty': 0}}
+                 'metrics': {'challenge': 0.0, 'progress': 0.05}, 'fitness': {'critic': review, 'review': review, 'social': 0.5, 'progress': 0.05, 'novelty': 0}}
             run.species.append(s); run.score(s); return s
         weak, strong = species('a', 0.0), species('b', 1.0)
         self.assertEqual(run.archive['0-0'], 'b')
@@ -96,6 +96,39 @@ class EvolveTest(unittest.TestCase):
             self.assertEqual(run.champion()['id'], 's0')
             child['promoted'] = True
             self.assertEqual(run.champion()['id'], 'g1c0')
+
+    def test_critic_caps_are_measured_not_claimed(self):
+        run = bare()
+        run.language, run.input = 'en', {'goal': 'g'}
+        class Judge:
+            def call(self, name, prompt, pictures=()):
+                return {'derivative': True, 'scores': {'novelty': 9, 'visual': 9, 'feel': 7, 'feedback': 7, 'clarity': 7, 'depth': 7},
+                        'issues': [{'severity': 'major', 'area': 'visual', 'problem': 'boxes', 'evidence': 'x', 'fix': 'draw a silhouette'}]}
+        run.judge = Judge()
+        with tempfile.TemporaryDirectory() as folder:
+            run.root = Path(folder)
+            source = run.root / 'src'; source.mkdir()
+            (source / 'index.html').write_text('<html><script>' + 'ctx.fillRect(0,0,1,1);' * 40 + '</script></html>')
+            frames = run.root / 'evidence' / 'g1c0' / 'runtime'; frames.mkdir(parents=True)
+            for i in range(8):
+                (frames / f'frame-{i}.png').write_bytes(b'same')
+            critic = run.critique('g1c0', {}, {'name': 'g1c0', 'errors': []}, source)
+        self.assertTrue(critic['measured']['motion']['frozen'])
+        self.assertLessEqual(max(critic['scores'].values()), 2)
+        self.assertEqual(len(critic['caps']), 3)
+
+    def test_reviews_markdown_is_verbatim(self):
+        run = bare()
+        run.language = 'en'
+        with tempfile.TemporaryDirectory() as folder:
+            run.root = Path(folder)
+            species = {'id': 's0', 'gen': 0, 'status': 'alive', 'critic': {'verdict': 'Generic.', 'scores': {}, 'issues': [
+                {'severity': 'critical', 'area': 'novelty', 'problem': 'stock collect-3 loop', 'evidence': 'f1', 'fix': 'add X'}]},
+                'society': {'summary': 's', 'posts': [{'name': 'Ann', 'archLabel': 'KOL', 'rating': 1, 'stay': False, 'quit_reason': 'boring', 'text': 'meh'}]}}
+            run.write_ledger(species, {'valid': True, 'errors': []})
+            text = run.reviews_markdown(species)
+        self.assertIn('R1 [critical/novelty] stock collect-3 loop', text)
+        self.assertIn('P1 Ann (KOL), 1/5, quit: boring: meh', text)
 
 
 if __name__ == '__main__':

@@ -10,12 +10,12 @@ import {Method} from './Method';
 export type HubTab = 'galaxy' | 'specimen' | 'cabinet' | 'observatory' | 'method';
 type GameLite = {id: string; mode: string; title?: string; createdAt: string; prompt?: string};
 
-const PHASES = ['baseline', 'design', 'build', 'play', 'review', 'society', 'select'];
+const PHASES = ['baseline', 'build', 'play', 'critic', 'review', 'society', 'select'];
 
 function EvolvePanel({gameId, run, locale, onStarted}: {gameId: string; run?: Run; locale: string; onStarted: (id: string) => void}) {
   const zh = locale === 'zh'; const L = (a: string, b: string) => (zh ? a : b);
   const [goal, setGoal] = useState(L('让新玩家更快理解目标，跳跃手感更好，节奏更紧凑，同时让游戏更有个性。', 'Clearer goals for new players, better jump feel, tighter pacing and more personality.'));
-  const [gens, setGens] = useState(3); const [kids, setKids] = useState(2); const [calls, setCalls] = useState(44); const [minutes, setMinutes] = useState(60);
+  const [gens, setGens] = useState(3); const [kids, setKids] = useState(4); const [teamMinutes, setTeamMinutes] = useState(25); const [calls, setCalls] = useState(160); const [minutes, setMinutes] = useState(300);
   const [busy, setBusy] = useState(false); const [err, setErr] = useState(''); const [open, setOpen] = useState(false);
   const active = run && ACTIVE.includes(run.status);
   const evo = run?.evolution; const focus = evo?.species.find(s => s.id === run?.focus);
@@ -23,7 +23,7 @@ function EvolvePanel({gameId, run, locale, onStarted}: {gameId: string; run?: Ru
     setBusy(true); setErr('');
     try {
       const versions = await api(`/api/versions/${gameId}`);
-      const r = await api(`/api/improve/${gameId}`, {kind: 'evolve', requestId: crypto.randomUUID(), baseVersion: versions.current, goal, constraints: L('保留题材、核心玩法、操作方式和现有素材；不得作弊、不得删除真实挑战。', 'Keep genre, core loop, controls and assets; no cheats or removed challenge.'), budgets: {generations: gens, children: kids, calls, minutes, episodes: 3}});
+      const r = await api(`/api/improve/${gameId}`, {kind: 'evolve', requestId: crypto.randomUUID(), baseVersion: versions.current, goal, constraints: L('改动不设上限，可以重做画面、玩法和关卡；必须遵守技术约定（单文件、GameAgentBridge、真实键盘操作），不得作弊。', 'No limit on the size of a change: art, mechanics and levels may be redone. The technical contract (single file, GameAgentBridge, real keyboard input) holds; no cheats.'), budgets: {generations: gens, children: kids, teamMinutes, calls, minutes, episodes: 3}});
       onStarted(r.run.id); setOpen(false);
     } catch (e) { setErr(String(e)); } finally { setBusy(false); }
   };
@@ -64,10 +64,10 @@ function EvolvePanel({gameId, run, locale, onStarted}: {gameId: string; run?: Ru
       {!run && <div className="heavy slant text-[20px]">{L('开始第一次进化', 'Start the first run')}</div>}
       <label className={lab}>{L('进化方向（选择压力）', 'Direction (selection pressure)')}<textarea className="field mt-2 font-sans text-[14px] font-normal normal-case leading-7 tracking-normal" rows={3} value={goal} onChange={e => setGoal(e.target.value)} /></label>
       <div className="grid grid-cols-2 gap-3">
-        {([[L('代数', 'Generations'), gens, setGens, 1, 5], [L('每代后代', 'Children/gen'), kids, setKids, 1, 3], [L('调用上限', 'Call budget'), calls, setCalls, 8, 80], [L('分钟上限', 'Minutes'), minutes, setMinutes, 5, 90]] as const).map(([l, v, set, min, max]) =>
+        {([[L('代数', 'Generations'), gens, setGens, 1, 5], [L('每代制作组', 'Studios/gen'), kids, setKids, 1, 6], [L('每组分钟', 'Min/studio'), teamMinutes, setTeamMinutes, 5, 90], [L('总分钟上限', 'Total minutes'), minutes, setMinutes, 10, 600], [L('评审调用上限', 'Judge calls'), calls, setCalls, 8, 300]] as const).map(([l, v, set, min, max]) =>
           <label key={l as string} className={lab}>{l}<input type="number" min={min} max={max} value={v as number} onChange={e => (set as any)(Number(e.target.value))} className="field mt-1.5 py-2 font-mono" /></label>)}
       </div>
-      <p className="text-[11px] leading-5 text-ink3">{L(`预计约 ${2 + gens * kids * 6} 次调用。每个后代：设计、制作、试玩策略、社会推演，加 2 次盲评。`, `About ${2 + gens * kids * 6} calls. Each child: design, build, player policy, society, plus 2 reviews.`)}</p>
+      <p className="text-[11px] leading-5 text-ink3">{L(`每代 ${kids} 个 dsh 制作组并行 fork 亲本、按真实评价自由修改（每组最多 ${teamMinutes} 分钟，不限改动量）。评审约 ${2 + gens * kids * 5} 次调用：试玩策略、严苛评审、两次盲评、社会推演。`, `${kids} dsh studios per generation fork a parent and change it freely from its real reviews (up to ${teamMinutes} min each, no edit cap). About ${2 + gens * kids * 5} judge calls: policy, critic, two blind reviews, society.`)}</p>
       <button disabled={busy} onClick={start} className="btn-red w-full py-3.5 text-[18px]">{busy ? '…' : <>{L('开始进化', 'Start evolution')} →</>}</button>
       {err && <p className="text-[12px] font-semibold text-pop">{err}</p>}
     </div>}

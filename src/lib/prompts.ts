@@ -65,11 +65,11 @@ OUTPUT RULES:
 - Every playerAbilities item MUST include an input field (e.g. "Z: Attack", "Space: Jump").
 - Keep language = "${lang}".
 
-DESIGN CONSTRAINTS:
-- Provide 3-6 levels.
-- Provide 3-8 enemies with simple behaviors.
+DESIGN CONSTRAINTS (depth over breadth; one excellent level beats five thin ones):
+- Provide 1-2 levels, each built around ONE signature mechanic that is not a stock genre staple; say in coreLoop what makes it different from a generic platformer.
+- Provide 2-4 enemies whose behaviours force different player decisions (no reskins of the same patrol).
 - Include clear controls and core loop.
-- For each level, provide a clear objective and 2-4 setPieces.
+- For each level, provide a clear objective and 3-5 setPieces that escalate the signature mechanic.
 
 ASSET RULES (IMPORTANT):
 - ${zh ? "每个 asset.prompt 必须只描述【单张】图片（单个对象/单个角色），不要在提示词里使用“差分/差分图”的概念，也不要要求一张图里包含多个表情/动作/姿势。" : "Each asset.prompt MUST describe ONE image only (single object/character). Do NOT ask for sprite sheets, grids, or multiple variants in a single image."}

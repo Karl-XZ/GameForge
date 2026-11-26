@@ -49,7 +49,7 @@ export async function providerRequest(model: string, endpoint: string, body: obj
   signal=signal||generationSignal();
   signal?.throwIfAborted();
   const config = providerConfig(model);
-  const timeout = AbortSignal.timeout(Number(process.env.MODEL_TIMEOUT_MS || 180000));
+  const timeout = AbortSignal.timeout(Number(process.env.MODEL_TIMEOUT_MS || 600000));
   const response = await fetch(`${config.base}/${endpoint}`, {
     method: 'POST', headers: { Authorization: `Bearer ${config.key}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ ...body, model: config.model }), signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
@@ -67,17 +67,23 @@ export async function providerRequest(model: string, endpoint: string, body: obj
 
 export async function complete(opts: { model: string; prompt: string; image?: {mimeType: string; data: string}; signal?: AbortSignal; json?: boolean }) {
   const content = opts.image ? [{ type: 'text', text: opts.prompt }, { type: 'image_url', image_url: { url: `data:${opts.image.mimeType};base64,${opts.image.data}` } }] : opts.prompt;
-  const data = await providerRequest(opts.model, 'chat/completions', {
-    messages: [{role: 'user', content}], max_tokens: 16000, stream: false,
+  // v4-pro has no image input; DeepSeek's vision model is flash (V4.1).
+  const model = opts.image && opts.model === 'deepseek/deepseek-v4-pro' ? 'deepseek/deepseek-flash' : opts.model;
+  // Thinking is on for every call: planning before writing is most of the quality. Reasoning tokens share
+  // max_tokens, so the budget is far above the old 16k (the API allows up to 384K).
+  const data = await providerRequest(model, 'chat/completions', {
+    messages: [{role: 'user', content}], max_tokens: Number(process.env.GAMEFORGE_MAX_TOKENS || 64000), stream: false,
     ...(opts.json ? {response_format:{type:'json_object'}}:{}),
-    ...(opts.model.startsWith('qwen/') ? { enable_thinking: false } : { thinking: { type: 'disabled' } }),
+    ...(model.startsWith('qwen/') ? { enable_thinking: true } : { thinking: { type: 'enabled' }, reasoning_effort: process.env.GAMEFORGE_REASONING_EFFORT || 'high' }),
   }, opts.signal);
-  const answer = data.choices?.[0]?.message?.content;
+  const choice = data.choices?.[0];
+  if (choice?.finish_reason === 'length') throw new Error('Model output was truncated at max_tokens; raise GAMEFORGE_MAX_TOKENS or simplify the request');
+  const answer = choice?.message?.content;
   if (typeof answer !== 'string' || !answer.trim()) throw new Error('Model returned no text');
   const directory = process.env.GAMEFORGE_DATA_DIR;
   if (directory) {
     await fs.mkdir(directory, {recursive: true});
-    await fs.appendFile(path.join(directory, 'provider-usage.jsonl'), JSON.stringify({at: new Date().toISOString(), model: opts.model, usage: data.usage ?? null, cost: null})+'\n');
+    await fs.appendFile(path.join(directory, 'provider-usage.jsonl'), JSON.stringify({at: new Date().toISOString(), model, usage: data.usage ?? null, finish: choice?.finish_reason ?? null, cost: null})+'\n');
   }
   return answer.trim();
 }

@@ -46,6 +46,10 @@ def should_promote(valid, reviews):
                     any(p.startswith('B/') for p in r.get('evidence', [])) for r in reviews))
 
 
+MAX_TOKENS = int(os.environ.get('GAMEFORGE_MAX_TOKENS', '64000'))
+CALL_SECONDS = int(os.environ.get('GAMEFORGE_CALL_SECONDS', '600'))
+
+
 class BudgetExceeded(RuntimeError):
     pass
 
@@ -136,23 +140,28 @@ class Models:
             if label:
                 content.append({'type':'text','text':'Screenshot evidence path: '+label})
             content.append({'type': 'image_url', 'image_url': {'url': 'data:image/png;base64,' + base64.b64encode(Path(file).read_bytes()).decode()}})
-        payload = {'model': self.model_id, 'messages': [{'role': 'user', 'content': content}], 'max_tokens': 16000,
+        model_id = self.model_id
+        if pictures and model_id == 'deepseek-v4-pro':
+            model_id = 'deepseek-flash'  # v4-pro has no image input; flash (V4.1) is DeepSeek's vision model
+        # Thinking on: the reasoning budget shares max_tokens, so leave generous room (API max is 384K).
+        payload = {'model': model_id, 'messages': [{'role': 'user', 'content': content}], 'max_tokens': MAX_TOKENS,
                    'response_format': {'type':'json_object'}}
         if self.model.startswith('qwen/'):
-            payload['enable_thinking'] = False
+            payload['enable_thinking'] = True
         else:
-            payload['thinking'] = {'type': 'disabled'}
+            payload['thinking'] = {'type': 'enabled'}
+            payload['reasoning_effort'] = os.environ.get('GAMEFORGE_REASONING_EFFORT', 'high')
         request = urllib.request.Request(self.base + '/chat/completions', data=json.dumps(payload).encode(),
             headers={'Content-Type': 'application/json', 'Authorization': 'Bearer '+self.key})
         replies = queue.Queue()
         def request_model():
             try:
-                with urllib.request.urlopen(request, timeout=180) as response:
+                with urllib.request.urlopen(request, timeout=CALL_SECONDS) as response:
                     replies.put((True, json.load(response)))
             except Exception as error:
                 replies.put((False, type(error).__name__))
         threading.Thread(target=request_model, daemon=True).start()
-        deadline = time.monotonic() + 180
+        deadline = time.monotonic() + CALL_SECONDS
         while True:
             self.tick()
             if time.monotonic() > deadline:
@@ -167,8 +176,17 @@ class Models:
         self.budget.finish(slot, result.get('usage'))
         choice=result['choices'][0]
         raw=choice['message']['content']
-        atomic(cache.with_name(name+'-response.json'),{'content':raw,'finishReason':choice.get('finish_reason'),'usage':result.get('usage')})
-        answer = clean_json(raw)
+        atomic(cache.with_name(name+'-response.json'),{'content':raw,'finishReason':choice.get('finish_reason'),'usage':result.get('usage'),'model':model_id})
+        if choice.get('finish_reason') == 'length':
+            raise ValueError('Model output truncated at max_tokens: '+name)
+        try:
+            answer = clean_json(raw)
+        except json.JSONDecodeError as error:
+            if name.endswith('-json'):
+                raise ValueError('Model returned invalid JSON twice: '+name) from error
+            # One explicit correction request (its own budget slot and cache entry), never a silent re-dispatch.
+            answer = self.call(name+'-json', 'Your previous answer was not valid JSON ('+str(error)[:120]+'). Return the same content as ONE valid JSON '
+                               'object, nothing else. Escape quotes inside strings.\n\nPrevious answer:\n'+raw[:60000])
         atomic(cache, answer)
         self.tick()
         return answer

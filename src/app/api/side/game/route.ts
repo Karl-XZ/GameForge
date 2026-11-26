@@ -2,10 +2,11 @@
 import { generatePlayableHtml } from "@/lib/playableHtml";
 import { buildSideScrollerGameHtmlPrompt } from "@/lib/prompts";
 import { loadGameRecord, saveGameRecord } from "@/lib/store";
+import { buildWithStudio, studioEnabled } from "@/lib/studio";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 120;
+export const maxDuration = 800;
 
 export async function POST(req: Request) {
   try {
@@ -30,6 +31,13 @@ export async function POST(req: Request) {
       type: meta.type,
       file: meta.file,
     }));
+
+    if (studioEnabled(record.textModel)) {
+      // A dsh studio writes, playtests, looks at its screenshots, takes one real critique and revises.
+      const { html, report } = await buildWithStudio({ gameId, prompt: record.prompt, language: record.language, plan, assets });
+      const saved = await saveGameRecord(gameId, { gameHtml: html, status: "ready", studio: report });
+      return NextResponse.json({ ok: true, gameId: saved?.id ?? gameId, gameHtml: html, studio: report });
+    }
 
     const html = await generatePlayableHtml({
       model: record.textModel,

@@ -13,9 +13,9 @@
 
 ## 🧬 Darwin Evolution · 达尔文进化
 
-**Forge a game from one sentence, then let it evolve.** Every offspring goes through GameForge's own *make → play → review* pipeline: a semantic mutation is built with exact edits, really played in an isolated sandbox by three AI player personas (newbie / speedrunner / explorer), compared with its parent in reversed blind A/B reviews, discussed by a simulated 40-persona player society, and selected by fitness and a MAP-Elites archive. A crashing original is repaired from the real runtime error before evolution starts.
+**Forge a game from one sentence, then let it evolve like an open-source game.** A DeepSeek Harness (dsh) studio builds the first playable, playtests it and looks at its own screenshots. Every generation, several dsh studios fork a parent, read the real reviews of that exact version and change whatever they decide, with no edit cap. Each fork goes through four checks. Three AI player personas really play it in an isolated sandbox. A harsh vision critic scores it with measured caps, so stock loops and box art cannot score high. A reversed blind A/B review compares it with its parent, and a simulated 40-persona player society discusses it. Fitness and a MAP-Elites archive then select which forks breed. Every model call runs with thinking enabled.
 
-一句话锻造游戏，再让它自己进化：语义变异 → 隔离沙箱真实按键试玩 → 双顺序盲评 → 模拟玩家社会 → 自然选择。界面是游戏菜单式的波普风格（红 / 黑 / 白、斜切色块、硬投影、网点）：**谱系**图、**标本**卡、**标本柜**（MAP-Elites）、**观察台**（可以采访模拟玩家）和**方法**页。详见 [docs/DARWIN.md](docs/DARWIN.md)。
+一句话锻造游戏，再让它像开源游戏一样进化：dsh 制作组 fork 并按真实评价大改 → 隔离沙箱真实按键试玩 → 严苛评审 + 双顺序盲评 → 模拟玩家社会 → 自然选择。界面是游戏菜单式的波普风格（红 / 黑 / 白、斜切色块、硬投影、网点）：**谱系**图、**标本**卡、**标本柜**（MAP-Elites）、**观察台**（可以采访模拟玩家）和**方法**页。详见 [docs/DARWIN.md](docs/DARWIN.md)。
 
 <div align="center">
   <img src="docs/images/darwin_galaxy.png" alt="Darwin galaxy" width="850"/>

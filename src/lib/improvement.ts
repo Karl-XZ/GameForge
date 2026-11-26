@@ -9,7 +9,7 @@ import { withGameLock } from './lock';
 import { configuredModels, parseModel } from './providers';
 import { z } from 'zod';
 
-const budgetsSchema=z.object({rounds:z.number().int().min(1).max(5).default(3),episodes:z.number().int().min(1).max(3).default(3),calls:z.number().int().min(4).max(80).default(30),minutes:z.number().int().min(1).max(90).default(30),generations:z.number().int().min(1).max(5).default(3),children:z.number().int().min(1).max(3).default(2)});
+const budgetsSchema=z.object({rounds:z.number().int().min(1).max(5).default(3),episodes:z.number().int().min(1).max(3).default(3),calls:z.number().int().min(4).max(300).default(30),minutes:z.number().int().min(1).max(600).default(30),generations:z.number().int().min(1).max(5).default(3),children:z.number().int().min(1).max(6).default(4),teamMinutes:z.number().int().min(5).max(90).default(25)});
 export const runDir=(gameId:string,runId:string)=>path.join(dataRoot(),safeId(gameId),'runs',safeId(runId));
 const linuxPath=(file:string)=>file.replace(/^([A-Za-z]):[\\/]/,(_,letter)=>`/mnt/${letter.toLowerCase()}/`).replace(/\\/g,'/');
 
@@ -38,7 +38,8 @@ export async function createRun(gameId:string,body:any) {
   const budgets=budgetsSchema.parse(body.budgets||{});
   const kind=z.enum(['improve','evaluate','evolve']).parse(body.kind||'improve');
   const model=String(body.model||configuredModels().defaultText);parseModel(model);
-  const strongJudge=configuredModels().text.includes('deepseek/deepseek-v4-pro')&&model.startsWith('deepseek/')?'deepseek/deepseek-v4-pro':model;
+  // Judges look at screenshots: DeepSeek's vision model is flash (V4.1); v4-pro has no image input.
+  const strongJudge=model.startsWith('deepseek/')?'deepseek/deepseek-flash':model;
   const reviewModel=String(body.reviewModel||strongJudge);parseModel(reviewModel);
   const goal=String(body.goal||'Improve goal clarity, input response, fairness, pacing and recovery without changing the core game.').slice(0,4000);
   const constraints=String(body.constraints||'Keep the genre, core loop, existing assets and genuine challenge.').slice(0,4000);

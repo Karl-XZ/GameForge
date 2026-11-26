@@ -1,7 +1,7 @@
 'use client';
 import * as React from 'react';
 import {useState} from 'react';
-import {api, evidenceUrl, fmt, geneOf, pct, speciesUrl, SWATCH, type Run, type Species} from './common';
+import {AREA, api, evidenceUrl, fmt, geneOf, pct, speciesUrl, SWATCH, type Run, type Species} from './common';
 
 export function Radar({values, labels, color = '#E8132E', size = 240}: {values: number[]; labels: string[]; color?: string; size?: number}) {
   const c = size / 2, R = size * 0.34; const n = values.length;
@@ -90,12 +90,12 @@ export function Specimen({run, sid, gameId, locale, likes, onLike, onApply, onOp
         </figure>
 
         <section className="plate p-5">
-          <H3 aside={<span className="font-mono text-[10px] text-snow/60">F = .35 {L('盲评', 'rev')} + .30 {L('社会', 'soc')} + .15 {L('进度', 'prog')} + .20 {L('新颖', 'nov')}</span>}>{L('测量', 'Measurements')}</H3>
+          <H3 aside={<span className="font-mono text-[10px] text-snow/60">F = .35 {L('评审', 'critic')} + .15 {L('盲评', 'rev')} + .25 {L('社会', 'soc')} + .10 {L('进度', 'prog')} + .15 {L('新意', 'nov')}</span>}>{L('测量', 'Measurements')}</H3>
           <div className="grid items-center gap-6 sm:grid-cols-[auto_1fr]">
-            <div className="flex justify-center"><Radar values={[f?.review ?? 0, f?.social ?? 0, f?.progress ?? 0, f?.novelty ?? 0, s.metrics?.challenge ?? 0]} labels={[L('盲评', 'Review'), L('社会', 'Society'), L('进度', 'Progress'), L('新颖', 'Novelty'), L('挑战', 'Challenge')]} color={gene.color} /></div>
+            <div className="flex justify-center"><Radar values={[f?.critic ?? 0, f?.review ?? 0, f?.social ?? 0, f?.progress ?? 0, f?.novelty ?? 0]} labels={[L('评审', 'Critic'), L('盲评', 'Review'), L('社会', 'Society'), L('进度', 'Progress'), L('新意', 'Novelty')]} color={gene.color} /></div>
             <div className="grid grid-cols-3 gap-2.5">
-              {[[L('综合适应度', 'Fitness F'), fmt(f?.F)], [L('社会分', 'Society S'), fmt(s.society?.S)], [L('盲评得票', 'Blind votes'), f ? `${Math.round((f.review ?? 0) * 2 * 10) / 10}/2` : '—'],
-                [L('最远进度', 'Progress'), pct(s.metrics?.progress)], [L('留存率', 'Retention'), pct(s.society?.metrics?.retention)], [L('真人选择', 'Human picks'), String(like)]].map(([k, v], i) =>
+              {[[L('综合适应度', 'Fitness F'), fmt(f?.F)], [L('严苛评审', 'Critic'), s.critic ? `${Math.round(s.critic.C * 100) / 10}` : '—'], [L('社会分', 'Society S'), fmt(s.society?.S)],
+                [L('盲评得票', 'Blind votes'), f ? `${Math.round((f.review ?? 0) * 2 * 10) / 10}/2` : '—'], [L('最远进度', 'Progress'), pct(s.metrics?.progress)], [L('真人选择', 'Human picks'), String(like)]].map(([k, v], i) =>
                 <div key={k} className={`-skew-x-[6deg] border-[2.5px] border-jet px-3 py-2.5 ${i === 0 ? 'bg-pop text-snow shadow-hard-sm' : 'bg-snow'}`}>
                   <div className="skew-x-[6deg]">
                     <div className="font-display text-[32px] leading-none num">{v}</div>
@@ -127,6 +127,31 @@ export function Specimen({run, sid, gameId, locale, likes, onLike, onApply, onOp
           {s.latin && <div className="mt-4"><span className="tag rotate-[-2deg] px-3.5 py-1.5 text-[19px] normal-case"><span>{s.latin}</span></span></div>}
           {s.hypothesis && <div className="bubble mt-9 border-[3px] border-jet bg-snow px-5 py-4 shadow-hard"><p className="text-[16px] font-medium leading-[1.85] text-ink2">{s.hypothesis}</p></div>}
         </header>
+
+        {s.critic && !s.critic.error && <section className="plate p-5">
+          <H3 aside={<span className="font-display text-[22px] leading-none text-pop num">{Math.round(s.critic.C * 100) / 10}<span className="text-[13px] text-snow/60">/10</span></span>}>{L('严苛评审', 'Harsh critic')}</H3>
+          <p className="heavy text-[17px] leading-8">{s.critic.verdict}</p>
+          {s.critic.resembles && <p className="mt-2 text-[13px] text-ink2"><span className="tag mr-2"><span>{s.critic.derivative ? L('套路', 'Derivative') : L('像', 'Resembles')}</span></span>{s.critic.resembles}</p>}
+          <div className="mt-4 grid grid-cols-2 gap-x-5 gap-y-2 sm:grid-cols-3">{Object.entries(s.critic.scores).map(([k, v]) =>
+            <div key={k}><div className="flex justify-between text-[12px] font-bold"><span>{(AREA[k] || [k, k])[zh ? 0 : 1]}</span><span className="font-mono">{v}/10</span></div>
+              <div className="mt-1 h-2.5 -skew-x-[20deg] border-2 border-jet bg-snow"><div className={`h-full ${v <= 3 ? 'bg-pop' : v >= 7 ? 'bg-jet' : 'bg-steel'}`} style={{width: `${v * 10}%`}} /></div></div>)}</div>
+          {!!s.critic.caps?.length && <p className="mt-3 bg-volt px-3 py-1.5 text-[12px] font-semibold">{L('测量封顶：', 'Measured caps: ')}{s.critic.caps.join(' · ')}</p>}
+          <ol className="mt-4 space-y-2.5">{s.critic.issues.map((x, i) => <li key={i} className="border-l-[5px] border-jet bg-bone p-3 text-[13px] leading-6" style={{borderColor: x.severity === 'critical' ? '#E8132E' : x.severity === 'major' ? '#0B0B0D' : '#9A9AA2'}}>
+            <div className="flex flex-wrap items-center gap-2"><span className="font-display text-[14px] text-pop">R{i + 1}</span><span className={`tag ${x.severity === 'critical' ? 'tag-red' : ''}`}><span>{x.severity}</span></span><span className="text-[11px] font-bold uppercase text-ink3">{(AREA[x.area] || [x.area, x.area])[zh ? 0 : 1]}</span></div>
+            <p className="mt-1 font-semibold text-jet">{x.problem}</p>
+            <p className="mt-1 text-ink2"><span className="font-bold text-pop">→ </span>{x.fix}</p>
+          </li>)}</ol>
+          {!!s.critic.strengths?.length && <p className="mt-3 text-[12px] text-ink3">{L('值得保留：', 'Keep: ')}{s.critic.strengths.join('；')}</p>}
+        </section>}
+
+        {s.team && <section className="plate-dark p-5">
+          <div className="mb-3 flex flex-wrap items-center gap-2"><span className="tag tag-red text-[14px]"><span>{s.gene === 'repair' ? L('修复组', 'Repair team') : L(`制作组 #${s.team.index}`, `Studio #${s.team.index}`)}</span></span><span className="text-[12px] text-snow/60">DeepSeek Harness · {L('fork 亲本后自由修改', 'forked the parent, changed freely')}</span></div>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">{[[L('分钟', 'min'), s.team.minutes ?? '—'], [L('工具调用', 'tool calls'), s.team.toolCalls ?? '—'], [L('自测', 'playtests'), s.team.playtests ?? '—'], [L('看截图', 'shots seen'), s.team.imagesViewed ?? '—'], [L('改动行', 'lines changed'), s.diffLines ?? '—']].map(([k, v]) =>
+            <div key={k as string} className="border-2 border-snow/20 px-2 py-1.5"><div className="font-display text-[22px] leading-none num">{v}</div><div className="mt-1 text-[10px] text-snow/60">{k}</div></div>)}</div>
+          {!!s.submission?.answered?.length && <p className="mt-3 text-[12px] text-snow/80">{L('回应的评价：', 'Answered: ')}<span className="font-mono text-volt">{s.submission.answered.join(' ')}</span></p>}
+          {s.team.report && <details className="mt-3 text-[13px] leading-6 text-snow/85"><summary className="cursor-pointer font-bold text-snow">{L('制作组的交付说明', 'Studio report')}</summary><p className="mt-2 whitespace-pre-wrap">{s.team.report}</p></details>}
+          {s.team.gate && s.team.gate !== 'ok' && <p className="mt-2 font-mono text-[12px] text-pop">{s.team.gate}</p>}
+        </section>}
 
         {!!(s.changes?.length || s.summary || s.error) && <section className="plate p-5">
           <H3>{parent ? L(`相比亲本「${parent.name || parent.id}」`, `Versus parent “${parent.name || parent.id}”`) : L('变异内容', 'Mutation')}</H3>
